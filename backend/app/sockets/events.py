@@ -7,6 +7,7 @@ from app.models.notification import Notification
 from sqlalchemy import select, update
 from datetime import datetime, timezone
 import uuid
+from app.utils.security import decode_token
 
 sio = socketio.AsyncServer(
     async_mode="asgi",
@@ -37,9 +38,21 @@ async def _set_online_status(user_id: str, is_online: bool):
 
 @sio.event
 async def connect(sid, environ, auth):
-    user_id = auth.get("user_id") if auth else None
+    # Frontend sends auth.token (JWT access token); fallback accepts auth.user_id
+    token = auth.get("token") if auth else None
+    user_id = None
+
+    if token:
+        payload = decode_token(token)
+        if payload and payload.get("type") == "access":
+            user_id = payload.get("sub")
+
+    # Fallback for legacy/debugging clients that send user_id directly
+    if not user_id and auth:
+        user_id = auth.get("user_id")
+
     if not user_id:
-        return False   # Reject unauthenticated connections
+        return False   # Reject unauthenticated / invalid token connections
 
     connected_users[user_id] = sid
     await sio.enter_room(sid, f"user_{user_id}")
@@ -47,7 +60,7 @@ async def connect(sid, environ, auth):
 
     # Broadcast online status to all connected clients
     await sio.emit("user_online", {"user_id": user_id})
-    print(f"🟢 Connected: {user_id} (sid={sid})")
+    print(f"[SOCKET] Connected: {user_id} (sid={sid})")
 
 
 @sio.event
@@ -58,7 +71,7 @@ async def disconnect(sid):
         del connected_users[user_id]
         await _set_online_status(user_id, False)
         await sio.emit("user_offline", {"user_id": user_id})
-        print(f"🔴 Disconnected: {user_id}")
+        print(f"[SOCKET] Disconnected: {user_id}")
 
 
 # ── Messaging ─────────────────────────────────────────────────────────────────

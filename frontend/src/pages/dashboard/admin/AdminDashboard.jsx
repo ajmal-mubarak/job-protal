@@ -67,10 +67,14 @@ export default function AdminDashboard() {
           {stats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               {[
-                { label: 'Total Users', value: stats.total_users || 0 },
-                { label: 'Employers', value: stats.employers || 0 },
-                { label: 'Recruiters', value: stats.recruiters || 0 },
-                { label: 'Job Seekers', value: stats.jobseekers || 0 },
+                { label: 'Total Users',  value: stats.total_users ?? 0 },
+                { label: 'Employers',    value: stats.users_by_role?.employer ?? 0 },
+                { label: 'Recruiters',   value: stats.users_by_role?.recruiter ?? 0 },
+                { label: 'Job Seekers',  value: stats.users_by_role?.jobseeker ?? 0 },
+                { label: 'Total Jobs',   value: stats.total_jobs ?? 0 },
+                { label: 'Active Jobs',  value: stats.active_jobs ?? 0 },
+                { label: 'Featured',     value: stats.featured_jobs ?? 0 },
+                { label: 'Applications', value: stats.total_applications ?? 0 },
               ].map((s) => (
                 <div key={s.label} className="stat-card">
                   <p className="text-xs text-text-muted mb-1">{s.label}</p>

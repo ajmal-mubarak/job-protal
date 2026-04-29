@@ -1,14 +1,20 @@
 import api from './axiosInstance'
 
 export const applicationsApi = {
-  // Backend expects multipart/form-data with job_id, cover_letter, resume (optional file)
+  /**
+   * Apply to a job.
+   * data: { job_id, cover_letter?, resume_file? (File object) }
+   * The backend expects multipart/form-data with optional `resume` file upload.
+   * If no file is provided, the backend falls back to the jobseeker's profile resume_url.
+   */
   apply: (data) => {
     const form = new FormData()
     form.append('job_id', data.job_id)
     if (data.cover_letter) form.append('cover_letter', data.cover_letter)
-    if (data.resume_url) form.append('cover_letter', (form.get('cover_letter') || '') + `\n\nResume: ${data.resume_url}`)
-    // If user provided a resume_url string, add it as metadata in cover letter
-    // (Backend supports optional file upload; we pass the URL in cover letter for now)
+    // Only append the file if it's an actual File object (from an <input type="file">)
+    if (data.resume_file instanceof File) {
+      form.append('resume', data.resume_file)
+    }
     return api.post('/applications', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })

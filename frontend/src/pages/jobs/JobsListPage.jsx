@@ -24,8 +24,8 @@ export default function JobsListPage() {
   const [page, setPage] = useState(1)
   const [showFilters, setShowFilters] = useState(false)
 
-  // Filter state
-  const [query, setQuery] = useState(searchParams.get('q') || '')
+  // Filter state — read ?q= (from hero) or ?search= (from direct URL)
+  const [query, setQuery] = useState(searchParams.get('q') || searchParams.get('search') || '')
   const [jobType, setJobType] = useState(searchParams.get('type') || '')
   const [location, setLocation] = useState(searchParams.get('location') || '')
   const [featuredOnly, setFeaturedOnly] = useState(searchParams.get('featured') === 'true')
@@ -41,9 +41,12 @@ export default function JobsListPage() {
 
       const res = await jobsApi.list(params)
       const data = res.data
-      if (p === 1) setJobs(data.items || [])
-      else setJobs((prev) => [...prev, ...(data.items || [])])
-      setTotal(data.total || 0)
+      // Backend returns: { jobs: [...], page, limit, count }
+      const jobsList = data.jobs || []
+      const jobsCount = data.count ?? jobsList.length
+      if (p === 1) setJobs(jobsList)
+      else setJobs((prev) => [...prev, ...jobsList])
+      setTotal(jobsCount)
       setPage(p)
     } catch { setJobs([]) }
     finally { setLoading(false) }

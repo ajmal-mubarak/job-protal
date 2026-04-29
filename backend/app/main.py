@@ -79,7 +79,7 @@ def create_app() -> FastAPI:
     )
 
     # ── Routers ───────────────────────────────────────────────────────────────
-    from app.routers import auth, jobs, applications, chat, notifications, payments, admin, upload
+    from app.routers import auth, jobs, applications, chat, notifications, payments, admin, upload, profiles
     app.include_router(auth.router)
     app.include_router(jobs.router)
     app.include_router(applications.router)
@@ -88,6 +88,7 @@ def create_app() -> FastAPI:
     app.include_router(payments.router)
     app.include_router(admin.router)
     app.include_router(upload.router)
+    app.include_router(profiles.router)
 
     # ── Static file serving (local uploads) ───────────────────────────────────
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)

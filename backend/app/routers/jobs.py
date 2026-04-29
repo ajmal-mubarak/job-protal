@@ -34,7 +34,23 @@ async def _get_poster_profile(user: User, db: AsyncSession):
     return None
 
 
-# ── List / Search ─────────────────────────────────────────────────────────────
+# ── My Jobs (Employer/Recruiter) ──────────────────────────────────────────────
+# NOTE: Must be defined BEFORE /{job_id} to avoid FastAPI matching "my" as a UUID
+
+@router.get("/my/listings", response_model=list[JobResponse])
+async def my_jobs(
+    current_user: User = Depends(require_employer_or_recruiter),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(Job)
+        .where(Job.posted_by_user_id == current_user.id)
+        .order_by(desc(Job.created_at))
+    )
+    return result.scalars().all()
+
+
+# ── Get Single Job ────────────────────────────────────────────────────────────
 
 @router.get("", response_model=JobListResponse)
 async def list_jobs(
@@ -133,7 +149,7 @@ async def create_job(
     if not profile:
         raise HTTPException(status_code=400, detail="Profile not found")
 
-    is_premium = await get_user_premium_status(current_user)
+    is_premium = await get_user_premium_status(current_user, db)
     can_post, count, limit = await check_job_post_limit(current_user.id, is_premium, db)
     if not can_post:
         raise HTTPException(
@@ -219,16 +235,4 @@ async def delete_job(
     await db.commit()
 
 
-# ── My Jobs (Employer/Recruiter) ──────────────────────────────────────────────
-
-@router.get("/my/listings", response_model=list[JobResponse])
-async def my_jobs(
-    current_user: User = Depends(require_employer_or_recruiter),
-    db: AsyncSession = Depends(get_db),
-):
-    result = await db.execute(
-        select(Job)
-        .where(Job.posted_by_user_id == current_user.id)
-        .order_by(desc(Job.created_at))
-    )
-    return result.scalars().all()
+# (my_jobs moved above get_job — see top of 'Get Single Job' section)

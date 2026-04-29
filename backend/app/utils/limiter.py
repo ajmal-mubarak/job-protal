@@ -18,20 +18,41 @@ def _today_utc() -> datetime:
     return datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
 
 
-async def get_user_premium_status(user: User) -> bool:
-    """Returns True if user has active premium subscription."""
+async def get_user_premium_status(user: User, db: AsyncSession = None) -> bool:
+    """Returns True if user has active premium subscription.
+
+    Uses explicit DB queries to avoid lazy-loading in async context (MissingGreenlet).
+    Pass `db` from the request context; falls back to a new session if omitted.
+    """
+    from app.models.employer import Employer, Recruiter
+    from sqlalchemy import select as _select
+
     now = datetime.now(timezone.utc)
-    if user.role == UserRole.employer and user.employer_profile:
-        return user.employer_profile.is_premium and (
-            user.employer_profile.premium_expires_at is None or
-            user.employer_profile.premium_expires_at > now
-        )
-    if user.role == UserRole.recruiter and user.recruiter_profile:
-        return user.recruiter_profile.is_premium and (
-            user.recruiter_profile.premium_expires_at is None or
-            user.recruiter_profile.premium_expires_at > now
-        )
-    return False
+
+    async def _check(db_session: AsyncSession) -> bool:
+        if user.role == UserRole.employer:
+            result = await db_session.execute(
+                _select(Employer).where(Employer.user_id == user.id)
+            )
+            profile = result.scalar_one_or_none()
+            if profile and profile.is_premium:
+                return profile.premium_expires_at is None or profile.premium_expires_at > now
+        elif user.role == UserRole.recruiter:
+            result = await db_session.execute(
+                _select(Recruiter).where(Recruiter.user_id == user.id)
+            )
+            profile = result.scalar_one_or_none()
+            if profile and profile.is_premium:
+                return profile.premium_expires_at is None or profile.premium_expires_at > now
+        return False
+
+    if db is not None:
+        return await _check(db)
+
+    # Fallback: open a fresh session (e.g. socket context)
+    from app.database import AsyncSessionLocal
+    async with AsyncSessionLocal() as session:
+        return await _check(session)
 
 
 async def check_job_post_limit(user_id: uuid.UUID, is_premium: bool, db: AsyncSession) -> tuple[bool, int, int]:

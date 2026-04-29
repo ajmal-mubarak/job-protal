@@ -1,37 +1,85 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { MapPin, Clock, Briefcase, TrendingUp, Star, ArrowLeft, Send, Loader, AlertCircle, Upload } from 'lucide-react'
+import {
+  MapPin, Clock, Briefcase, TrendingUp, Star, ArrowLeft,
+  Send, Loader, AlertCircle, Upload, FileText, CheckCircle,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import { jobsApi } from '../../api/jobs'
 import { applicationsApi } from '../../api/applications'
+import { profilesApi } from '../../api/profiles'
 import { useAuth } from '../../hooks/useAuth'
 import { cn, timeAgo, formatSalary, jobTypeLabels } from '../../lib/utils'
 
+// ── Apply Modal ───────────────────────────────────────────────────────────────
 function ApplyModal({ job, onClose }) {
   const [coverLetter, setCoverLetter] = useState('')
-  const [resumeUrl, setResumeUrl] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [profileResume, setProfileResume] = useState(null)
+  const [newFile, setNewFile] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [loadingProfile, setLoadingProfile] = useState(true)
+  const fileRef = useRef()
+
+  // Pre-load stored resume from profile
+  useEffect(() => {
+    profilesApi.getMe()
+      .then((res) => setProfileResume(res.data?.resume_url || null))
+      .catch(() => {})
+      .finally(() => setLoadingProfile(false))
+  }, [])
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      toast.error('Only PDF files are accepted')
+      return
+    }
+    setNewFile(file)
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!resumeUrl) { toast.error('Please provide your resume URL'); return }
-    setLoading(true)
+    let finalResumeUrl = profileResume
+
+    if (newFile) {
+      setUploading(true)
+      try {
+        const upRes = await profilesApi.uploadResume(newFile)
+        finalResumeUrl = upRes.data.url
+      } catch {
+        toast.error('Resume upload failed')
+        setUploading(false)
+        return
+      }
+      setUploading(false)
+    }
+
+    if (!finalResumeUrl) {
+      toast.error('Please upload a PDF resume to apply')
+      return
+    }
+
+    setSubmitting(true)
     try {
       await applicationsApi.apply({
         job_id: job.id,
-        resume_url: resumeUrl,
+        resume_url: finalResumeUrl,
         cover_letter: coverLetter,
       })
-      toast.success('Application submitted successfully!')
+      toast.success('Application submitted!')
       onClose()
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Application failed')
     } finally {
-      setLoading(false)
+      setSubmitting(false)
     }
   }
+
+  const busy = uploading || submitting
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -40,21 +88,59 @@ function ApplyModal({ job, onClose }) {
         <p className="text-sm text-text-muted mb-5">{job.company_name || 'Confidential'}</p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {/* Resume */}
           <div className="form-group">
-            <label className="label">Resume URL *</label>
-            <input
-              id="apply-resume-url"
-              value={resumeUrl}
-              onChange={(e) => setResumeUrl(e.target.value)}
-              type="url"
-              placeholder="https://drive.google.com/..."
-              className="input"
-            />
-            <p className="text-xs text-text-muted mt-1">Paste a link to your resume (Google Drive, Dropbox, etc.)</p>
+            <label className="label">Resume (PDF)</label>
+
+            {loadingProfile ? (
+              <div className="flex items-center gap-2 text-sm text-text-muted py-2">
+                <Loader size={14} className="animate-spin" /> Loading your profile resume...
+              </div>
+            ) : profileResume && !newFile ? (
+              <div className="flex items-center justify-between bg-surface-2 border border-border rounded-xl px-3 py-2.5">
+                <div className="flex items-center gap-2 text-sm text-text-secondary">
+                  <CheckCircle size={14} className="text-success flex-shrink-0" />
+                  <a href={profileResume} target="_blank" rel="noopener noreferrer"
+                    className="text-primary hover:text-primary-light truncate max-w-[200px]">
+                    Profile resume
+                  </a>
+                  <span className="text-text-muted text-xs">(auto-attached)</span>
+                </div>
+                <button type="button" onClick={() => fileRef.current?.click()}
+                  className="text-xs text-text-muted hover:text-text-primary transition-colors flex-shrink-0 ml-2">
+                  Replace
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className={cn(
+                  'w-full border-2 border-dashed rounded-xl px-4 py-5 flex flex-col items-center gap-2 transition-colors',
+                  newFile ? 'border-success/40 bg-success/5' : 'border-border hover:border-border-light'
+                )}
+              >
+                {newFile ? (
+                  <>
+                    <FileText size={20} className="text-success" />
+                    <p className="text-sm text-text-primary font-medium">{newFile.name}</p>
+                    <p className="text-xs text-text-muted">Click to change</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload size={20} className="text-text-muted" />
+                    <p className="text-sm text-text-muted">Click to upload a PDF resume</p>
+                  </>
+                )}
+              </button>
+            )}
+
+            <input ref={fileRef} type="file" accept=".pdf,application/pdf" className="hidden" onChange={handleFileChange} />
           </div>
 
+          {/* Cover letter */}
           <div className="form-group">
-            <label className="label">Cover Letter (optional)</label>
+            <label className="label">Cover Letter <span className="text-text-muted">(optional)</span></label>
             <textarea
               id="apply-cover-letter"
               value={coverLetter}
@@ -66,9 +152,14 @@ function ApplyModal({ job, onClose }) {
           </div>
 
           <div className="flex gap-3 mt-2">
-            <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
-            <button id="apply-submit" type="submit" disabled={loading} className="btn-primary flex-1">
-              {loading ? <Loader size={16} className="animate-spin" /> : <><Send size={15} /> Submit</>}
+            <button type="button" onClick={onClose} className="btn-secondary flex-1" disabled={busy}>Cancel</button>
+            <button id="apply-submit" type="submit" disabled={busy} className="btn-primary flex-1">
+              {uploading
+                ? <><Loader size={14} className="animate-spin" /> Uploading...</>
+                : submitting
+                  ? <><Loader size={14} className="animate-spin" /> Submitting...</>
+                  : <><Send size={15} /> Submit Application</>
+              }
             </button>
           </div>
         </form>
@@ -77,10 +168,11 @@ function ApplyModal({ job, onClose }) {
   )
 }
 
+// ── Job Detail Page ───────────────────────────────────────────────────────────
 export default function JobDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { isAuthenticated, canApply, isJobSeeker } = useAuth()
+  const { isAuthenticated, canApply } = useAuth()
   const [job, setJob] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showApply, setShowApply] = useState(false)
@@ -140,7 +232,7 @@ export default function JobDetailPage() {
               <span className="flex items-center gap-1.5"><Clock size={14} /> Posted {timeAgo(job.created_at)}</span>
             </div>
 
-            {/* Salary */}
+            {/* Salary + single Apply button */}
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
                 <p className="text-xs text-text-muted mb-0.5">Salary</p>
@@ -151,12 +243,10 @@ export default function JobDetailPage() {
                   <Send size={15} /> Apply Now
                 </button>
               ) : !isAuthenticated ? (
-                <Link to="/auth/login" className="btn-primary">
-                  Login to Apply
-                </Link>
+                <Link to="/auth/login" className="btn-primary">Login to Apply</Link>
               ) : (
                 <span className="text-xs text-text-muted bg-surface-2 border border-border px-3 py-2 rounded-xl">
-                  {isJobSeeker ? 'Already a seeker' : 'Not eligible to apply'}
+                  Not eligible to apply
                 </span>
               )}
             </div>
@@ -182,16 +272,7 @@ export default function JobDetailPage() {
             </div>
           </div>
 
-          {/* Bottom apply */}
-          {canApply && (
-            <div className="card p-5 flex items-center justify-between gap-4">
-              <p className="text-sm text-text-muted">Interested in this role? Don't miss out.</p>
-              <button onClick={() => setShowApply(true)} className="btn-primary">
-                Apply Now <Send size={15} />
-              </button>
-            </div>
-          )}
-
+          {/* Sign-in nudge */}
           {!isAuthenticated && (
             <div className="card p-5 flex items-center gap-3 border-primary/20 bg-primary/5">
               <AlertCircle size={18} className="text-primary-light flex-shrink-0" />

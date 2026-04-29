@@ -1,7 +1,23 @@
 import { Link } from 'react-router-dom'
 import { Briefcase, Globe, Share2, ExternalLink } from 'lucide-react'
+import { useAuth } from '../../hooks/useAuth'
 
 export default function Footer() {
+  const { user, isAuthenticated, canPostJob } = useAuth()
+
+  // Build role-aware Platform links
+  const platformLinks = [
+    { to: '/jobs', label: 'Browse Jobs', show: true },
+    // "Post a Job" only for employer / recruiter
+    { to: '/dashboard/employer', label: 'Post a Job', show: canPostJob },
+    // "My Applications" only for job seekers
+    { to: '/dashboard/jobseeker', label: 'My Applications', show: isAuthenticated && user?.role === 'jobseeker' },
+    // "Go Premium" only for employer / recruiter
+    { to: '/payment/upgrade', label: 'Go Premium ⚡', show: canPostJob },
+    // Sign up CTA for guests
+    { to: '/auth/signup', label: 'Get Started Free', show: !isAuthenticated },
+  ].filter((l) => l.show)
+
   return (
     <footer className="border-t border-border bg-surface mt-auto">
       <div className="max-w-7xl mx-auto px-4 py-12">
@@ -14,7 +30,7 @@ export default function Footer() {
               <span className="font-bold text-text-primary">Job<span className="text-primary-light">Portal</span></span>
             </Link>
             <p className="text-sm text-text-muted max-w-xs leading-relaxed">
-              The premium platform connecting top employers, recruiters, and job seekers. AI-powered matching for your next career move.
+              The platform connecting top employers, recruiters, and job seekers. AI-powered matching for your next career move.
             </p>
             <div className="flex items-center gap-3 mt-4">
               <a href="#" className="btn-icon" aria-label="Website"><Globe size={16} /></a>
@@ -26,9 +42,13 @@ export default function Footer() {
           <div>
             <p className="text-sm font-semibold text-text-primary mb-4">Platform</p>
             <ul className="flex flex-col gap-2.5">
-              <li><Link to="/jobs" className="text-sm text-text-muted hover:text-text-primary transition-colors">Browse Jobs</Link></li>
-              <li><Link to="/auth/signup" className="text-sm text-text-muted hover:text-text-primary transition-colors">Post a Job</Link></li>
-              <li><Link to="/payment/upgrade" className="text-sm text-text-muted hover:text-text-primary transition-colors">Go Premium</Link></li>
+              {platformLinks.map((link) => (
+                <li key={link.to}>
+                  <Link to={link.to} className="text-sm text-text-muted hover:text-text-primary transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 

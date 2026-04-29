@@ -202,7 +202,7 @@ async def run_ai_score(
     current_user: User = Depends(require_employer_or_recruiter),
     db: AsyncSession = Depends(get_db),
 ):
-    is_premium = await get_user_premium_status(current_user)
+    is_premium = await get_user_premium_status(current_user, db)
     can_use, count, limit = await check_ai_usage_limit(current_user.id, is_premium, db)
     if not can_use:
         raise HTTPException(

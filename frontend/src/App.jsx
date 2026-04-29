@@ -28,6 +28,10 @@ import ApplicantsPage from './pages/dashboard/employer/ApplicantsPage'
 import RecruiterDashboard from './pages/dashboard/recruiter/RecruiterDashboard'
 import JobSeekerDashboard from './pages/dashboard/jobseeker/JobSeekerDashboard'
 
+// Pages — Profile
+import ProfilePage from './pages/profile/ProfilePage'
+import SeekersPage from './pages/profile/SeekersPage'
+
 // Pages — Other
 import ChatPage from './pages/chat/ChatPage'
 import UpgradePage from './pages/payment/UpgradePage'
@@ -96,6 +100,10 @@ export default function App() {
 
         {/* ── Job Seeker ──────────────────────────────────────────────── */}
         <Route path="/dashboard/jobseeker" element={<RoleRoute allowedRoles={['jobseeker']}><JobSeekerDashboard /></RoleRoute>} />
+
+        {/* ── Profile ─────────────────────────────────────────────────────── */}
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/seekers" element={<RoleRoute allowedRoles={['employer', 'recruiter']}><SeekersPage /></RoleRoute>} />
 
         {/* ── Chat ────────────────────────────────────────────────────── */}
         <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />

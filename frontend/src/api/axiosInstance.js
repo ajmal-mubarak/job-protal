@@ -35,9 +35,15 @@ api.interceptors.response.use(
     // If 401 and not already retrying
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (originalRequest.url?.includes('/auth/refresh')) {
-        // Refresh itself failed — log out
+        // Refresh itself failed — this is expected if the user isn't logged in yet.
+        // Only redirect to login if we're currently on a protected page.
+        // Do NOT redirect if already on an auth page (would cause an infinite loop).
         useAuthStore.getState().clearAuth()
-        window.location.href = '/auth/login'
+        const authPaths = ['/auth/', '/verify', '/reset-password']
+        const isOnAuthPage = authPaths.some((p) => window.location.pathname.startsWith(p))
+        if (!isOnAuthPage && window.location.pathname !== '/') {
+          window.location.href = '/auth/login'
+        }
         return Promise.reject(error)
       }
 

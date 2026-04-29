@@ -1,10 +1,10 @@
 """Gemini AI service — resume parsing and job match scoring."""
 import json
-import google.generativeai as genai
+from google import genai
 from app.config import settings
 
-genai.configure(api_key=settings.GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash")
+_client = genai.Client(api_key=settings.GEMINI_API_KEY)
+_MODEL = "gemini-2.0-flash"
 
 
 async def score_resume_against_job(
@@ -39,7 +39,9 @@ Return ONLY valid JSON in this exact format (no markdown, no extra text):
 }}
 """
     try:
-        response = model.generate_content(prompt)
+        response = await _client.aio.models.generate_content(
+            model=_MODEL, contents=prompt
+        )
         raw = response.text.strip()
         # Strip markdown code blocks if present
         if raw.startswith("```"):
@@ -88,7 +90,9 @@ Return ONLY valid JSON in this exact format:
 }}
 """
     try:
-        response = model.generate_content(prompt)
+        response = await _client.aio.models.generate_content(
+            model=_MODEL, contents=prompt
+        )
         raw = response.text.strip()
         if raw.startswith("```"):
             raw = raw.split("```")[1]

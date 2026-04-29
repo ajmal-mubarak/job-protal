@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Loader, User, ExternalLink, Zap, BarChart2, PlusCircle } from 'lucide-react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { ArrowLeft, Loader, User, ExternalLink, Zap, BarChart2, PlusCircle, MessageSquare, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import Navbar from '../../../components/layout/Navbar'
 import Sidebar from '../../../components/layout/Sidebar'
 import { applicationsApi } from '../../../api/applications'
 import { jobsApi } from '../../../api/jobs'
+import { chatApi } from '../../../api/chat'
 import { useAuth } from '../../../hooks/useAuth'
 import { cn, timeAgo, statusColors } from '../../../lib/utils'
 
@@ -34,6 +35,8 @@ export default function ApplicantsPage() {
   const isRecruiter = user?.role === 'recruiter'
   const dashBase = isRecruiter ? '/dashboard/recruiter' : '/dashboard/employer'
   const sidebarItems = isRecruiter ? RECRUITER_SIDEBAR : EMPLOYER_SIDEBAR
+  const navigate = useNavigate()
+  const [messaging, setMessaging] = useState(null) // appId of in-progress message
 
   useEffect(() => {
     Promise.all([
@@ -64,6 +67,19 @@ export default function ApplicantsPage() {
       toast.error(err.response?.data?.detail || 'Scoring failed')
     } finally {
       setScoring((s) => ({ ...s, [appId]: false }))
+    }
+  }
+
+  const startChat = async (app) => {
+    if (!app.applicant_id) { toast.error('Applicant ID not found'); return }
+    setMessaging(app.id)
+    try {
+      const res = await chatApi.getOrCreateConversation(app.applicant_id)
+      navigate(`/chat/${res.data.id}`)
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Could not start conversation')
+    } finally {
+      setMessaging(null)
     }
   }
 
@@ -127,7 +143,7 @@ export default function ApplicantsPage() {
                       </a>
                     )}
 
-                    {/* AI Score button (recruiter only or employer) */}
+                    {/* AI Score button */}
                     {isRecruiter && (
                       <button
                         onClick={() => scoreResume(app.id)}
@@ -138,6 +154,19 @@ export default function ApplicantsPage() {
                         {app.ai_score != null ? 'Re-score' : 'AI Score'}
                       </button>
                     )}
+
+                    {/* Message applicant */}
+                    <button
+                      id={`msg-applicant-${app.id}`}
+                      onClick={() => startChat(app)}
+                      disabled={messaging === app.id}
+                      className="btn-ghost btn-sm text-xs flex items-center gap-1"
+                    >
+                      {messaging === app.id
+                        ? <Loader size={12} className="animate-spin" />
+                        : <MessageSquare size={12} />}
+                      Message
+                    </button>
 
                     {/* Status update */}
                     <div className="ml-auto flex items-center gap-1">

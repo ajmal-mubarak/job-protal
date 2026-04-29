@@ -1,4 +1,5 @@
 """Abstract EmailService + Resend implementation."""
+import asyncio
 import resend
 from abc import ABC, abstractmethod
 from app.config import settings
@@ -21,7 +22,9 @@ class ResendEmailService(EmailService):
             "subject": subject,
             "html": html,
         }
-        resend.Emails.send(params)
+        # Run blocking Resend HTTP call in thread pool to avoid blocking the event loop
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, resend.Emails.send, params)
 
 
 # ── Email Templates ───────────────────────────────────────────────────────────

@@ -131,6 +131,12 @@ export default function Navbar() {
         <div className="flex items-center gap-2">
           {isAuthenticated ? (
             <>
+              {/* Browse Seekers — employer/recruiter only */}
+              {['employer', 'recruiter'].includes(user?.role) && (
+                <Link to="/seekers" className={cn('btn-ghost text-sm hidden md:flex', location.pathname.startsWith('/seekers') && 'text-primary-light bg-primary/10')}>
+                  Browse Seekers
+                </Link>
+              )}
               {/* Notifications */}
               <div className="relative" ref={notifRef}>
                 <button
@@ -170,6 +176,9 @@ export default function Navbar() {
                     <Link to={dashboardLink} onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors">
                       <User size={14} /> Dashboard
                     </Link>
+                    <Link to="/profile" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors">
+                      <User size={14} /> My Profile
+                    </Link>
                     {['employer', 'recruiter'].includes(user?.role) && (
                       <Link to="/payment/upgrade" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-warning hover:bg-surface-2 transition-colors">
                         <Zap size={14} /> Upgrade to Premium
@@ -208,7 +217,11 @@ export default function Navbar() {
       {mobileOpen && (
         <div className="md:hidden border-t border-border bg-surface/95 backdrop-blur px-4 py-4 flex flex-col gap-2 animate-slide-up">
           <Link to="/jobs" onClick={() => setMobileOpen(false)} className="nav-item">Browse Jobs</Link>
+          {isAuthenticated && ['employer', 'recruiter'].includes(user?.role) && (
+            <Link to="/seekers" onClick={() => setMobileOpen(false)} className="nav-item">Browse Seekers</Link>
+          )}
           {isAuthenticated && <Link to={dashboardLink} onClick={() => setMobileOpen(false)} className="nav-item">Dashboard</Link>}
+          {isAuthenticated && <Link to="/profile" onClick={() => setMobileOpen(false)} className="nav-item">My Profile</Link>}
           {isAuthenticated && ['employer', 'recruiter', 'jobseeker'].includes(user?.role) && (
             <Link to="/chat" onClick={() => setMobileOpen(false)} className="nav-item">Messages</Link>
           )}
