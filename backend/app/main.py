@@ -9,7 +9,7 @@ import os
 from app.config import settings
 from app.database import create_tables
 from app.utils.security import hash_password
-from app.socket.events import sio
+from app.sockets.events import sio
 
 
 # ── Lifespan (startup / shutdown) ─────────────────────────────────────────────
