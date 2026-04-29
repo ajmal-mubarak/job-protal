@@ -35,8 +35,12 @@ async def get_db():
 
 async def create_tables():
     async with engine.begin() as conn:
-        from app.models import (  # noqa: F401 — ensures all models are registered
-            user, employer, recruiter, jobseeker,
-            job, application, conversation, notification, payment
-        )
+        # Import all models so SQLAlchemy registers them before create_all
+        import app.models.user       # noqa: F401
+        import app.models.employer   # noqa: F401  (Employer, Recruiter, JobSeeker)
+        import app.models.job        # noqa: F401  (Job, Application, AIUsage, JobPostUsage)
+        import app.models.conversation  # noqa: F401
+        import app.models.notification  # noqa: F401
+        import app.models.payment    # noqa: F401
         await conn.run_sync(Base.metadata.create_all)
+

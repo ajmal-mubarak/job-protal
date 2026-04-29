@@ -1,7 +1,7 @@
 """User model — core auth table shared by all roles."""
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, Boolean, DateTime, Enum as SAEnum
+from sqlalchemy import String, Boolean, DateTime, Enum as SAEnum, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 import enum
@@ -46,7 +46,7 @@ class EmailToken(Base):
     __tablename__ = "email_tokens"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     token_hash: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
     type: Mapped[str] = mapped_column(String(20), nullable=False)  # "verify" | "reset"
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

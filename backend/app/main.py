@@ -52,9 +52,9 @@ async def seed_admin():
             )
             db.add(admin)
             await db.commit()
-            print(f"✅ Admin seeded: {settings.ADMIN_EMAIL}")
+            print(f"[OK] Admin seeded: {settings.ADMIN_EMAIL}")
         else:
-            print(f"ℹ️  Admin already exists: {settings.ADMIN_EMAIL}")
+            print(f"[INFO] Admin already exists: {settings.ADMIN_EMAIL}")
 
 
 # ── App Factory ───────────────────────────────────────────────────────────────
@@ -68,9 +68,11 @@ def create_app() -> FastAPI:
     )
 
     # ── CORS ──────────────────────────────────────────────────────────────────
+    # Allow both common Vite ports (5173 and 5174) in development
+    cors_origins = [settings.FRONTEND_URL, "http://localhost:5173", "http://localhost:5174"]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[settings.FRONTEND_URL],
+        allow_origins=list(set(cors_origins)),
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
