@@ -1,10 +1,20 @@
 """Gemini AI service — resume parsing and job match scoring."""
 import json
-from google import genai
 from app.config import settings
 
-_client = genai.Client(api_key=settings.GEMINI_API_KEY)
+_client = None  # Lazy-initialized on first use — avoids blocking startup
 _MODEL = "gemini-2.0-flash"
+
+
+def _get_client():
+    """Return (and lazily create) the Gemini client."""
+    global _client
+    if _client is None:
+        from google import genai
+        if not settings.GEMINI_API_KEY:
+            raise RuntimeError("GEMINI_API_KEY is not set in .env")
+        _client = genai.Client(api_key=settings.GEMINI_API_KEY)
+    return _client
 
 
 async def score_resume_against_job(
@@ -39,7 +49,8 @@ Return ONLY valid JSON in this exact format (no markdown, no extra text):
 }}
 """
     try:
-        response = await _client.aio.models.generate_content(
+        client = _get_client()
+        response = await client.aio.models.generate_content(
             model=_MODEL, contents=prompt
         )
         raw = response.text.strip()
@@ -90,7 +101,8 @@ Return ONLY valid JSON in this exact format:
 }}
 """
     try:
-        response = await _client.aio.models.generate_content(
+        client = _get_client()
+        response = await client.aio.models.generate_content(
             model=_MODEL, contents=prompt
         )
         raw = response.text.strip()

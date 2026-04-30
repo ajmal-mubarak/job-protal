@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Eye, EyeOff, Briefcase, ArrowRight } from 'lucide-react'
+import { Eye, EyeOff, Briefcase, ArrowRight, Mail, RefreshCw, Zap } from 'lucide-react'
 import { authApi } from '../../api/auth'
 import useAuthStore from '../../store/useAuthStore'
 
@@ -15,14 +15,18 @@ const schema = z.object({
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 const GOOGLE_REDIRECT_URI = `${window.location.origin}/auth/google/callback`
+const IS_DEV = import.meta.env.DEV
 
 export default function LoginPage() {
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [unverifiedEmail, setUnverifiedEmail] = useState(null) // stores email when "not verified" error
+  const [resending, setResending] = useState(false)
+  const [devVerifying, setDevVerifying] = useState(false)
   const { setAuth } = useAuthStore()
   const navigate = useNavigate()
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, getValues, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
   })
 
@@ -35,6 +39,7 @@ export default function LoginPage() {
 
   const onSubmit = async (data) => {
     setLoading(true)
+    setUnverifiedEmail(null)
     try {
       const res = await authApi.login(data)
       const { access_token, role, user_id, name, avatar_url } = res.data
@@ -43,16 +48,43 @@ export default function LoginPage() {
       navigate(roleRoutes[role] || '/')
     } catch (err) {
       const detail = err.response?.data?.detail || 'Login failed'
-      if (detail.includes('verify')) {
-        toast.error('Email not verified', {
-          description: 'Please check your inbox or resend verification.',
-          action: { label: 'Resend', onClick: () => navigate('/auth/resend') },
-        })
+      if (detail.toLowerCase().includes('verify')) {
+        // Show inline unverified email UI instead of generic toast
+        setUnverifiedEmail(data.email)
       } else {
         toast.error(detail)
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleResendVerification = async () => {
+    if (!unverifiedEmail) return
+    setResending(true)
+    try {
+      await authApi.resendVerification(unverifiedEmail)
+      toast.success('Verification email sent!', {
+        description: `Check your inbox at ${unverifiedEmail}`,
+      })
+    } catch {
+      toast.error('Could not send verification email')
+    } finally {
+      setResending(false)
+    }
+  }
+
+  const handleDevVerify = async () => {
+    if (!unverifiedEmail) return
+    setDevVerifying(true)
+    try {
+      const res = await authApi.devVerifyUser(unverifiedEmail)
+      toast.success(res.data.message)
+      setUnverifiedEmail(null)
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Dev verify failed')
+    } finally {
+      setDevVerifying(false)
     }
   }
 
@@ -148,6 +180,50 @@ export default function LoginPage() {
             </button>
           </form>
 
+          {/* Unverified email banner */}
+          {unverifiedEmail && (
+            <div className="mt-4 p-4 bg-warning/10 border border-warning/30 rounded-xl animate-in">
+              <div className="flex items-start gap-3">
+                <Mail size={18} className="text-warning flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-warning mb-0.5">Email not verified</p>
+                  <p className="text-xs text-text-secondary mb-3">
+                    We sent a link to <span className="font-medium text-text-primary">{unverifiedEmail}</span>.
+                    Check your spam folder too.
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={handleResendVerification}
+                      disabled={resending}
+                      className="btn-secondary btn-sm w-full text-xs"
+                    >
+                      {resending ? (
+                        <span className="w-3 h-3 border-2 border-border-light border-t-text-primary rounded-full animate-spin" />
+                      ) : (
+                        <RefreshCw size={12} />
+                      )}
+                      Resend verification email
+                    </button>
+                    {IS_DEV && (
+                      <button
+                        onClick={handleDevVerify}
+                        disabled={devVerifying}
+                        className="btn-sm w-full text-xs bg-success/10 border border-success/30 text-success hover:bg-success/20 rounded-xl inline-flex items-center justify-center gap-1.5 transition-all"
+                      >
+                        {devVerifying ? (
+                          <span className="w-3 h-3 border-2 border-success/30 border-t-success rounded-full animate-spin" />
+                        ) : (
+                          <Zap size={12} />
+                        )}
+                        DEV: Verify instantly (skip email)
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {GOOGLE_CLIENT_ID && (
             <>
               <div className="flex items-center gap-3 my-5">
@@ -183,3 +259,4 @@ export default function LoginPage() {
     </div>
   )
 }
+

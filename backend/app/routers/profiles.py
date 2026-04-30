@@ -1,6 +1,7 @@
 """Profiles router — view/update own profile, browse job seekers."""
 import uuid
 from typing import Optional
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -12,6 +13,32 @@ from app.models.employer import Employer, Recruiter, JobSeeker
 from app.middleware.auth import get_current_user, require_employer_or_recruiter
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def compute_available(work_start: str | None, work_end: str | None) -> bool:
+    """
+    Returns True if the current UTC time falls within the seeker's working hours.
+    work_start / work_end are "HH:MM" strings (local to the seeker — we treat as UTC
+    for simplicity; a timezone field can be added later).
+    Returns True if no hours are set (they haven’t configured it).
+    """
+    if not work_start or not work_end:
+        return True   # No schedule set → show as available
+    try:
+        now = datetime.now(timezone.utc)
+        cur  = now.hour * 60 + now.minute
+        sh, sm = map(int, work_start.split(':'))
+        eh, em = map(int, work_end.split(':'))
+        start = sh * 60 + sm
+        end   = eh * 60 + em
+        if start <= end:
+            return start <= cur <= end
+        else:                     # overnight shift e.g. 22:00 – 06:00
+            return cur >= start or cur <= end
+    except Exception:
+        return True
 
 
 # ── Schemas ───────────────────────────────────────────────────────────────────
@@ -26,6 +53,9 @@ class JobSeekerProfileOut(BaseModel):
     location: Optional[str] = None
     experience_years: int = 0
     is_open_to_work: bool = True
+    work_start: Optional[str] = None
+    work_end: Optional[str] = None
+    is_currently_available: bool = True
 
     model_config = {"from_attributes": True}
 
@@ -36,6 +66,8 @@ class UpdateJobSeekerProfile(BaseModel):
     location: Optional[str] = None
     experience_years: Optional[int] = None
     is_open_to_work: Optional[bool] = None
+    work_start: Optional[str] = None
+    work_end: Optional[str] = None
 
 
 class UpdateEmployerProfile(BaseModel):
@@ -82,6 +114,9 @@ async def get_my_profile(
             "location": profile.location,
             "experience_years": profile.experience_years,
             "is_open_to_work": profile.is_open_to_work,
+            "work_start": profile.work_start,
+            "work_end": profile.work_end,
+            "is_currently_available": compute_available(profile.work_start, profile.work_end),
         })
 
     elif current_user.role == UserRole.employer:
@@ -129,7 +164,7 @@ async def update_my_profile(
         if not profile:
             profile = JobSeeker(user_id=current_user.id)
             db.add(profile)
-        allowed = {"headline", "skills", "location", "experience_years", "is_open_to_work", "resume_url"}
+        allowed = {"headline", "skills", "location", "experience_years", "is_open_to_work", "resume_url", "work_start", "work_end"}
         for k, v in body.items():
             if k in allowed and v is not None:
                 setattr(profile, k, v)
@@ -188,6 +223,7 @@ async def list_seekers(
 
     out = []
     for seeker, user in rows:
+        available = compute_available(seeker.work_start, seeker.work_end)
         out.append({
             "user_id": str(user.id),
             "name": user.name,
@@ -198,6 +234,9 @@ async def list_seekers(
             "location": seeker.location,
             "experience_years": seeker.experience_years,
             "is_open_to_work": seeker.is_open_to_work,
+            "work_start": seeker.work_start,
+            "work_end": seeker.work_end,
+            "is_currently_available": available,
         })
     return out
 
@@ -226,4 +265,7 @@ async def get_seeker_profile(
         "location": seeker.location,
         "experience_years": seeker.experience_years,
         "is_open_to_work": seeker.is_open_to_work,
+        "work_start": seeker.work_start,
+        "work_end": seeker.work_end,
+        "is_currently_available": compute_available(seeker.work_start, seeker.work_end),
     }

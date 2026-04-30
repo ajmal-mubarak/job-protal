@@ -5,10 +5,19 @@ const useSocketStore = create((set, get) => ({
   onlineUsers: new Set(),
   isConnected: false,
 
-  setSocket: (socket) => set({ socket, isConnected: true }),
-  disconnectSocket: () => {
+  // Store socket reference immediately on creation
+  setSocket: (socket) => set({ socket }),
+
+  // Called when socket physically connects/reconnects
+  setConnected: (isConnected) => set({ isConnected }),
+
+  // Called only on logout / auth change
+  clearSocket: () => {
     const { socket } = get()
-    if (socket) socket.disconnect()
+    if (socket) {
+      // Remove all listeners to prevent memory leaks
+      socket.removeAllListeners()
+    }
     set({ socket: null, isConnected: false, onlineUsers: new Set() })
   },
 
@@ -22,7 +31,7 @@ const useSocketStore = create((set, get) => ({
       return { onlineUsers: next }
     }),
 
-  isUserOnline: (userId) => get().onlineUsers.has(userId),
+  isUserOnline: (userId) => get().onlineUsers.has(String(userId)),
 }))
 
 export default useSocketStore

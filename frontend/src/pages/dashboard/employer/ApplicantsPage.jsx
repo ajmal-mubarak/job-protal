@@ -71,10 +71,14 @@ export default function ApplicantsPage() {
   }
 
   const startChat = async (app) => {
-    if (!app.applicant_id) { toast.error('Applicant ID not found'); return }
+    const targetUserId = app.applicant_user_id
+    if (!targetUserId) {
+      toast.error('Cannot start chat — applicant user ID not found')
+      return
+    }
     setMessaging(app.id)
     try {
-      const res = await chatApi.getOrCreateConversation(app.applicant_id)
+      const res = await chatApi.getOrCreateConversation(targetUserId)
       navigate(`/chat/${res.data.id}`)
     } catch (err) {
       toast.error(err?.response?.data?.detail || 'Could not start conversation')
@@ -119,7 +123,7 @@ export default function ApplicantsPage() {
                       </div>
                       <div>
                         <p className="font-semibold text-text-primary text-sm">{app.applicant_name || 'Applicant'}</p>
-                        <p className="text-xs text-text-muted">{app.applicant_email} · {timeAgo(app.created_at)}</p>
+                        <p className="text-xs text-text-muted">{app.applicant_email || '—'} · {timeAgo(app.created_at)}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

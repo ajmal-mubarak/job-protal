@@ -11,4 +11,6 @@ export const authApi = {
   resetPassword: (data) => api.post('/auth/reset-password', data),
   googleCallback: (code) => api.post('/auth/google/callback', { code }),
   googleCompleteSignup: (data) => api.post('/auth/google/complete-signup', data),
+  // DEV ONLY: verify user without email link (bypasses Resend free-plan restriction)
+  devVerifyUser: (email) => api.post('/auth/dev/verify-user', { email }),
 }

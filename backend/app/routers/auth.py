@@ -38,6 +38,35 @@ VERIFY_EXPIRE_HOURS = 24
 RESET_EXPIRE_MINUTES = 15
 
 
+# ── DEV-ONLY: Direct email verification (bypasses Resend) ────────────────────
+
+@router.post("/dev/verify-user", response_model=MessageResponse, tags=["dev"])
+async def dev_verify_user(body: dict, db: AsyncSession = Depends(get_db)):
+    """
+    DEV-ONLY endpoint to manually verify a user by email without needing an email link.
+    Useful when Resend can't deliver to external emails on the free plan.
+    Only works when APP_ENV=development.
+    """
+    if settings.APP_ENV != "development":
+        raise HTTPException(status_code=403, detail="Only available in development mode")
+
+    email = body.get("email")
+    if not email:
+        raise HTTPException(status_code=422, detail="email field required")
+
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail=f"No user found with email: {email}")
+
+    if user.is_verified:
+        return {"message": f"{email} is already verified"}
+
+    user.is_verified = True
+    await db.commit()
+    return {"message": f"✅ {email} has been verified. You can now log in."}
+
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _set_refresh_cookie(response: Response, token: str) -> None:
@@ -104,10 +133,30 @@ async def signup(body: SignupRequest, db: AsyncSession = Depends(get_db)):
     db.add(user)
     await db.flush()          # get user.id without committing
     _create_profile(user, db)
-    await _send_verification(user, db)
+
+    # ── Create the email token BEFORE commit (needs user.id) ──────────────────
+    raw_token, token_hash = generate_email_token()
+    email_token = EmailToken(
+        user_id=user.id,
+        token_hash=token_hash,
+        type="verify",
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=VERIFY_EXPIRE_HOURS),
+    )
+    db.add(email_token)
+
+    # ── Commit user + profile + token to DB ───────────────────────────────────
     await db.commit()
 
+    # ── Send email AFTER commit (so DB is saved even if email fails) ──────────
+    verify_url = f"{settings.FRONTEND_URL}/verify?token={raw_token}"
+    await email_service.send_email(
+        to=user.email,
+        subject="Verify your Job Portal account",
+        html=verification_email_html(user.name, verify_url),
+    )
+
     return {"message": "Account created! Please check your email to verify your account."}
+
 
 
 # ── Verify Email ──────────────────────────────────────────────────────────────

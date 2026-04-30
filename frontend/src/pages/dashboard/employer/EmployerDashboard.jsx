@@ -95,12 +95,22 @@ export default function EmployerDashboard() {
                       <span className="text-xs text-text-muted flex items-center gap-1"><Eye size={10} /> {job.view_count || 0} views</span>
                     </div>
                   </div>
-                  <Link
-                    to={`/dashboard/employer/jobs/${job.id}/applicants`}
-                    className="btn-secondary btn-sm flex-shrink-0 text-xs"
-                  >
-                    View Applicants
-                  </Link>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Link
+                      to={`/jobs/${job.id}`}
+                      className="btn-ghost btn-sm text-xs"
+                      title="View public job detail"
+                    >
+                      <Eye size={13} /> Detail
+                    </Link>
+                    <Link
+                      to={`/dashboard/employer/jobs/${job.id}/applicants`}
+                      className="btn-secondary btn-sm text-xs"
+                    >
+                      <Users size={13} /> Applicants ({job.applicant_count || 0})
+                    </Link>
+                  </div>
+
                 </div>
               ))}
             </div>

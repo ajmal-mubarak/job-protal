@@ -4,10 +4,11 @@ from app.config import settings
 
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=settings.APP_ENV == "development",
+    echo=False,          # Set to True temporarily only when debugging SQL queries
     pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
+    pool_size=5,         # Reduced for local dev (was 10)
+    max_overflow=10,     # Reduced for local dev (was 20)
+    connect_args={"server_settings": {"application_name": "job_portal"}},
 )
 
 AsyncSessionLocal = async_sessionmaker(

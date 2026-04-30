@@ -11,7 +11,11 @@ import { cn } from '../../lib/utils'
 const schema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/\d/, 'Password must contain at least one number'),
   role: z.enum(['employer', 'recruiter', 'jobseeker'], { required_error: 'Select a role' }),
 })
 
@@ -38,12 +42,21 @@ export default function SignupPage() {
     setLoading(true)
     try {
       await authApi.signup(data)
-      toast.success('Account created!', {
-        description: 'Check your email to verify your account.',
+      toast.success('Account created! Check your email to verify your account.', {
+        description: 'A verification link has been sent to ' + data.email,
+        duration: 6000,
       })
       navigate('/auth/login')
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Signup failed')
+      // Pydantic 422 errors return detail as an array of objects
+      const detail = err.response?.data?.detail
+      if (Array.isArray(detail)) {
+        // Show the first validation error message
+        const msg = detail[0]?.msg || 'Validation error'
+        toast.error(msg.replace('Value error, ', ''))
+      } else {
+        toast.error(typeof detail === 'string' ? detail : 'Signup failed. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -125,7 +138,7 @@ export default function SignupPage() {
                   id="signup-password"
                   {...register('password')}
                   type={showPw ? 'text' : 'password'}
-                  placeholder="Min. 8 characters"
+                  placeholder="Min. 8 chars, 1 uppercase, 1 number"
                   className={`input pr-10 ${errors.password ? 'input-error' : ''}`}
                 />
                 <button type="button" onClick={() => setShowPw((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary">
@@ -133,6 +146,7 @@ export default function SignupPage() {
                 </button>
               </div>
               {errors.password && <p className="text-xs text-error mt-1">{errors.password.message}</p>}
+              <p className="text-[11px] text-text-muted mt-1">Must have 8+ chars, 1 uppercase letter &amp; 1 number</p>
             </div>
 
             <button id="signup-submit" type="submit" disabled={loading} className="btn-primary w-full mt-2">

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Briefcase, Bell, MessageSquare, LogOut, ChevronDown, Menu, X, Zap, User } from 'lucide-react'
+import { Briefcase, Bell, MessageSquare, LogOut, ChevronDown, Zap, User } from 'lucide-react'
 import { toast } from 'sonner'
 import useAuthStore from '../../store/useAuthStore'
 import useNotificationStore from '../../store/useNotificationStore'
@@ -100,7 +100,7 @@ export default function Navbar() {
   const isActive = (path) => location.pathname === path
 
   return (
-    <nav className="sticky top-0 z-40 glass border-b border-border/50">
+    <nav className="sticky top-0 z-50 bg-background/60 backdrop-blur-2xl border-b border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.1)] supports-[backdrop-filter]:bg-background/40">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 flex-shrink-0">
@@ -202,20 +202,37 @@ export default function Navbar() {
             </>
           )}
 
-          {/* Mobile menu toggle */}
+          {/* Mobile menu toggle — animated hamburger */}
           <button
-            className="btn-icon md:hidden"
+            className="btn-icon md:hidden flex flex-col justify-center items-center w-9 h-9 gap-0"
             onClick={() => setMobileOpen((v) => !v)}
             aria-label="Toggle menu"
+            aria-expanded={mobileOpen}
           >
-            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+            <span className={cn(
+              'block w-5 h-0.5 bg-current transition-all duration-300 origin-center',
+              mobileOpen ? 'rotate-45 translate-y-[3px]' : 'translate-y-0'
+            )} />
+            <span className={cn(
+              'block w-5 h-0.5 bg-current transition-all duration-300 mt-1',
+              mobileOpen ? 'opacity-0 scale-x-0' : 'opacity-100 scale-x-100'
+            )} />
+            <span className={cn(
+              'block w-5 h-0.5 bg-current transition-all duration-300 origin-center mt-1',
+              mobileOpen ? '-rotate-45 -translate-y-[7px]' : 'translate-y-0'
+            )} />
           </button>
         </div>
       </div>
 
-      {/* Mobile nav */}
-      {mobileOpen && (
-        <div className="md:hidden border-t border-border bg-surface/95 backdrop-blur px-4 py-4 flex flex-col gap-2 animate-slide-up">
+      {/* Mobile nav — smooth slide down */}
+      <div
+        className={cn(
+          'md:hidden border-t border-border bg-background/80 backdrop-blur-2xl overflow-hidden transition-all duration-300 ease-in-out supports-[backdrop-filter]:bg-background/60',
+          mobileOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
+        )}
+      >
+        <div className="px-4 py-4 flex flex-col gap-1">
           <Link to="/jobs" onClick={() => setMobileOpen(false)} className="nav-item">Browse Jobs</Link>
           {isAuthenticated && ['employer', 'recruiter'].includes(user?.role) && (
             <Link to="/seekers" onClick={() => setMobileOpen(false)} className="nav-item">Browse Seekers</Link>
@@ -228,16 +245,16 @@ export default function Navbar() {
           {!isAuthenticated && (
             <>
               <Link to="/auth/login" onClick={() => setMobileOpen(false)} className="nav-item">Log in</Link>
-              <Link to="/auth/signup" onClick={() => setMobileOpen(false)} className="btn-primary">Get Started</Link>
+              <Link to="/auth/signup" onClick={() => setMobileOpen(false)} className="btn-primary mt-1">Get Started</Link>
             </>
           )}
           {isAuthenticated && (
-            <button onClick={handleLogout} className="nav-item text-error hover:text-error">
+            <button onClick={handleLogout} className="nav-item text-error hover:text-error mt-1">
               <LogOut size={16} /> Logout
             </button>
           )}
         </div>
-      )}
+      </div>
     </nav>
   )
 }

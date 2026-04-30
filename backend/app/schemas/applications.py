@@ -14,6 +14,10 @@ class ApplicationResponse(BaseModel):
     id: uuid.UUID
     job_id: uuid.UUID
     jobseeker_id: uuid.UUID
+    # Enriched applicant info (joined from JobSeeker → User)
+    applicant_user_id: Optional[uuid.UUID] = None
+    applicant_name: Optional[str] = None
+    applicant_email: Optional[str] = None
     resume_url: Optional[str] = None
     cover_letter: Optional[str] = None
     status: ApplicationStatus

@@ -1,8 +1,11 @@
 """Abstract EmailService + Resend implementation."""
 import asyncio
+import logging
 import resend
 from abc import ABC, abstractmethod
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class EmailService(ABC):
@@ -24,7 +27,28 @@ class ResendEmailService(EmailService):
         }
         # Run blocking Resend HTTP call in thread pool to avoid blocking the event loop
         loop = asyncio.get_running_loop()
-        await loop.run_in_executor(None, resend.Emails.send, params)
+        try:
+            result = await loop.run_in_executor(None, resend.Emails.send, params)
+            logger.info(f"[EMAIL] Sent '{subject}' to {to} — id: {getattr(result, 'id', result)}")
+        except Exception as exc:
+            # ── DEV-MODE FALLBACK ────────────────────────────────────────────
+            # Resend free plan only delivers to the account-owner's email.
+            # In development, extract and print the link so you can use it manually.
+            import re
+            urls = re.findall(r'href="(https?://[^"]+)"', html)
+            logger.error(
+                f"\n{'='*60}\n"
+                f"[EMAIL FAILED] Could not send to {to}\n"
+                f"Reason: {exc}\n"
+                f"{'─'*60}\n"
+                f"⚠  Resend free plan: only delivers to the account owner's email.\n"
+                f"   To send to any email, add & verify your domain at resend.com/domains\n"
+                f"{'─'*60}\n"
+                + (f"🔗 Verification/Reset URL (use this manually):\n   {urls[0]}\n" if urls else "")
+                + f"{'='*60}"
+            )
+            if settings.APP_ENV == "production":
+                raise  # In production, propagate the error
 
 
 # ── Email Templates ───────────────────────────────────────────────────────────

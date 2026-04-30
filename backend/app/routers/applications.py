@@ -21,6 +21,35 @@ from app.schemas.applications import ApplicationResponse, ApplicationStatusUpdat
 router = APIRouter(prefix="/applications", tags=["applications"])
 
 
+async def _enrich_application(app: Application, db: AsyncSession) -> dict:
+    """Add applicant name, email and user_id to application data."""
+    base = {
+        "id": app.id,
+        "job_id": app.job_id,
+        "jobseeker_id": app.jobseeker_id,
+        "resume_url": app.resume_url,
+        "cover_letter": app.cover_letter,
+        "status": app.status,
+        "ai_score": app.ai_score,
+        "ai_feedback": app.ai_feedback,
+        "created_at": app.created_at,
+        "updated_at": app.updated_at,
+        "applicant_user_id": None,
+        "applicant_name": None,
+        "applicant_email": None,
+    }
+    # Join JobSeeker → User to get name/email/user_id
+    js = (await db.execute(select(JobSeeker).where(JobSeeker.id == app.jobseeker_id))).scalar_one_or_none()
+    if js:
+        user = (await db.execute(select(User).where(User.id == js.user_id))).scalar_one_or_none()
+        if user:
+            base["applicant_user_id"] = user.id
+            base["applicant_name"] = user.name
+            base["applicant_email"] = user.email
+    return base
+
+
+
 # ── Apply to Job ──────────────────────────────────────────────────────────────
 
 @router.post("", response_model=ApplicationResponse, status_code=status.HTTP_201_CREATED)
@@ -101,7 +130,8 @@ async def my_applications(
     result = await db.execute(
         select(Application).where(Application.jobseeker_id == jobseeker.id)
     )
-    return result.scalars().all()
+    apps = result.scalars().all()
+    return [await _enrich_application(a, db) for a in apps]
 
 
 # ── Applications for a Job (Employer/Recruiter) ───────────────────────────────
@@ -121,7 +151,9 @@ async def job_applications(
         raise HTTPException(status_code=403, detail="Not authorized")
 
     result = await db.execute(select(Application).where(Application.job_id == job_id))
-    return result.scalars().all()
+    apps = result.scalars().all()
+    # Enrich each application with applicant name/email/user_id
+    return [await _enrich_application(a, db) for a in apps]
 
 
 # ── Update Application Status ─────────────────────────────────────────────────
@@ -146,29 +178,50 @@ async def update_status(
 
     application.status = body.status
 
-    # Notify jobseeker
+    # Build human-friendly status messages
+    status_config = {
+        "reviewing":   {"label": "is being reviewed 🔍",          "title": "Application Under Review"},
+        "shortlisted": {"label": "has been shortlisted! 🎉",       "title": "You've Been Shortlisted! 🎉"},
+        "rejected":    {"label": "was not selected this time",     "title": "Application Update"},
+        "hired":       {"label": "has been accepted — You're hired! 🎊", "title": "Congratulations! You're Hired! 🎊"},
+    }
+    cfg = status_config.get(body.status.value, {"label": f"updated to {body.status.value}", "title": "Application Update"})
+
+    # Notify jobseeker — save to DB + push via socket
     js_result = await db.execute(select(JobSeeker).where(JobSeeker.id == application.jobseeker_id))
     jobseeker = js_result.scalar_one_or_none()
     if jobseeker:
-        status_labels = {
-            "reviewing": "is being reviewed",
-            "shortlisted": "has been shortlisted 🎉",
-            "rejected": "was not selected",
-            "hired": "has been accepted! 🎊",
-        }
-        label = status_labels.get(body.status.value, f"updated to {body.status.value}")
         notification = Notification(
             user_id=jobseeker.user_id,
             type="application_update",
-            title="Application Update",
-            message=f"Your application for {job.title} {label}",
+            title=cfg["title"],
+            message=f"Your application for '{job.title}' {cfg['label']}",
             meta={"job_id": str(job.id), "application_id": str(application_id), "status": body.status.value},
         )
         db.add(notification)
+        await db.commit()
+        await db.refresh(application)
+        await db.refresh(notification)
 
-    await db.commit()
-    await db.refresh(application)
-    return application
+        # Push real-time socket notification to jobseeker
+        from app.sockets.events import push_notification
+        try:
+            await push_notification(
+                user_id=str(jobseeker.user_id),
+                notif_id=str(notification.id),
+                notif_type="application_update",
+                title=cfg["title"],
+                message=f"Your application for '{job.title}' {cfg['label']}",
+                meta={"job_id": str(job.id), "application_id": str(application_id), "status": body.status.value},
+            )
+        except Exception:
+            pass  # Socket push failure should not break the REST response
+    else:
+        await db.commit()
+        await db.refresh(application)
+
+    return await _enrich_application(application, db)
+
 
 
 # ── Withdraw Application ──────────────────────────────────────────────────────

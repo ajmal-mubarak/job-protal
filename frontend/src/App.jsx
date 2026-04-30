@@ -37,6 +37,7 @@ import ChatPage from './pages/chat/ChatPage'
 import UpgradePage from './pages/payment/UpgradePage'
 import PaymentSuccess from './pages/payment/PaymentSuccess'
 import PaymentFailed from './pages/payment/PaymentFailed'
+import NotFoundPage from './pages/NotFoundPage'
 
 // ── Socket connector (runs when logged in) ────────────────────────────────────
 function SocketConnector() {
@@ -73,8 +74,10 @@ export default function App() {
       <Routes>
         {/* ── Public ─────────────────────────────────────────────────── */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/jobs" element={<JobsListPage />} />
-        <Route path="/jobs/:id" element={<JobDetailPage />} />
+
+        {/* ── Jobs (login required to browse/view) ────────────────────── */}
+        <Route path="/jobs" element={<ProtectedRoute><JobsListPage /></ProtectedRoute>} />
+        <Route path="/jobs/:id" element={<ProtectedRoute><JobDetailPage /></ProtectedRoute>} />
 
         {/* ── Auth (guest only) ───────────────────────────────────────── */}
         <Route path="/auth/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
@@ -114,8 +117,8 @@ export default function App() {
         <Route path="/payment/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
         <Route path="/payment/failed" element={<ProtectedRoute><PaymentFailed /></ProtectedRoute>} />
 
-        {/* ── Catch-all ───────────────────────────────────────────────── */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* ── Catch-all → 404 ─────────────────────────────────────────── */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   )

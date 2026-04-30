@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import {
   User, Mail, MapPin, Briefcase, Upload, FileText,
-  Edit3, Save, X, CheckCircle, ExternalLink, Loader, Camera,
+  Edit3, Save, X, CheckCircle, ExternalLink, Loader, Camera, Clock,
 } from 'lucide-react'
 import Navbar from '../../components/layout/Navbar'
 import { profilesApi } from '../../api/profiles'
@@ -222,84 +222,89 @@ export default function ProfilePage() {
 
       <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-10">
         {/* Header card */}
-        <div className="card p-6 mb-6 flex items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
-            {/* Avatar — clickable to upload */}
-            <div className="relative flex-shrink-0 group">
-              <div
-                onClick={() => avatarRef.current?.click()}
-                className="w-16 h-16 rounded-2xl overflow-hidden border border-primary/30 cursor-pointer"
-                title="Click to change photo"
-              >
-                {avatarUploading ? (
-                  <div className="w-full h-full bg-primary/20 flex items-center justify-center">
-                    <Loader size={20} className="text-primary-light animate-spin" />
-                  </div>
-                ) : profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt={profile?.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary-light">
-                    {profile?.name?.[0]?.toUpperCase() || 'U'}
-                  </div>
-                )}
-              </div>
-              {/* Camera overlay on hover */}
-              {!avatarUploading && (
+        <div className="card p-6 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+            {/* Left: Avatar + info */}
+            <div className="flex items-start gap-4 flex-1 min-w-0">
+              {/* Avatar — clickable to upload */}
+              <div className="relative flex-shrink-0 group">
                 <div
                   onClick={() => avatarRef.current?.click()}
-                  className="absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  className="w-16 h-16 rounded-2xl overflow-hidden border border-primary/30 cursor-pointer"
+                  title="Click to change photo"
                 >
-                  <Camera size={18} className="text-white" />
+                  {avatarUploading ? (
+                    <div className="w-full h-full bg-primary/20 flex items-center justify-center">
+                      <Loader size={20} className="text-primary-light animate-spin" />
+                    </div>
+                  ) : profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={profile?.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary-light">
+                      {profile?.name?.[0]?.toUpperCase() || 'U'}
+                    </div>
+                  )}
                 </div>
-              )}
-              <input
-                ref={avatarRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarUpload}
-              />
-            </div>
-            <div>
-              {editing ? (
+                {/* Camera overlay on hover */}
+                {!avatarUploading && (
+                  <div
+                    onClick={() => avatarRef.current?.click()}
+                    className="absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  >
+                    <Camera size={18} className="text-white" />
+                  </div>
+                )}
                 <input
-                  value={form.name || ''}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  className="input text-lg font-bold mb-1"
-                  placeholder="Your name"
+                  ref={avatarRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
                 />
-              ) : (
-                <h1 className="text-xl font-bold text-text-primary">{profile?.name}</h1>
-              )}
-              <p className="text-sm text-text-muted capitalize">{role}</p>
-              <div className="flex items-center gap-1 mt-1 text-xs text-text-muted">
-                <Mail size={11} /> {profile?.email}
+              </div>
+              <div className="flex-1 min-w-0">
+                {editing ? (
+                  <input
+                    value={form.name || ''}
+                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                    className="input text-lg font-bold mb-1 w-full"
+                    placeholder="Your name"
+                  />
+                ) : (
+                  <h1 className="text-xl font-bold text-text-primary truncate">{profile?.name}</h1>
+                )}
+                <p className="text-sm text-text-muted capitalize">{role}</p>
+                <div className="flex items-center gap-1 mt-1 text-xs text-text-muted truncate">
+                  <Mail size={11} className="flex-shrink-0" /> <span className="truncate">{profile?.email}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex gap-2 flex-shrink-0">
-            {editing ? (
-              <>
-                <button onClick={handleCancel} className="btn-ghost btn-sm text-sm" disabled={saving}>
-                  <X size={14} /> Cancel
+            {/* Right: Edit / Save / Cancel buttons */}
+            <div className="flex gap-2 flex-shrink-0 self-start">
+              {editing ? (
+                <>
+                  <button onClick={handleCancel} className="btn-ghost btn-sm text-sm" disabled={saving}>
+                    <X size={14} /> <span className="hidden sm:inline">Cancel</span>
+                  </button>
+                  <button onClick={handleSave} className="btn-primary btn-sm text-sm" disabled={saving}>
+                    {saving ? <Loader size={14} className="animate-spin" /> : <Save size={14} />}
+                    <span className="hidden sm:inline">Save</span>
+                  </button>
+                </>
+              ) : (
+                <button onClick={() => setEditing(true)} className="btn-secondary btn-sm text-sm">
+                  <Edit3 size={14} /> <span className="hidden xs:inline sm:inline">Edit Profile</span>
                 </button>
-                <button onClick={handleSave} className="btn-primary btn-sm text-sm" disabled={saving}>
-                  {saving ? <Loader size={14} className="animate-spin" /> : <Save size={14} />}
-                  Save
-                </button>
-              </>
-            ) : (
-              <button onClick={() => setEditing(true)} className="btn-secondary btn-sm text-sm">
-                <Edit3 size={14} /> Edit Profile
-              </button>
-            )}
+              )}
+            </div>
           </div>
         </div>
+
 
         {/* ── Job Seeker specific fields ── */}
         {isJobSeeker && (
@@ -381,19 +386,82 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                {/* Open to work */}
-                <div className="flex items-center gap-3">
-                  <input
-                    id="open-to-work"
-                    type="checkbox"
-                    checked={editing ? (form.is_open_to_work ?? true) : (profile?.is_open_to_work ?? true)}
-                    onChange={(e) => editing && setForm((f) => ({ ...f, is_open_to_work: e.target.checked }))}
-                    disabled={!editing}
-                    className="accent-primary w-4 h-4"
-                  />
-                  <label htmlFor="open-to-work" className="text-sm text-text-secondary cursor-pointer">
-                    Open to work — visible to employers & recruiters
+                {/* Working hours (replaces simple checkbox) */}
+                <div>
+                  <label className="label flex items-center gap-1.5">
+                    <Clock size={13} /> Working Hours
                   </label>
+
+                  {editing ? (
+                    <div className="space-y-3">
+                      {/* Open to work toggle */}
+                      <label className="flex items-center gap-3 cursor-pointer select-none">
+                        <div
+                          onClick={() => setForm((f) => ({ ...f, is_open_to_work: !f.is_open_to_work }))}
+                          className={cn(
+                            'relative w-10 h-5 rounded-full transition-colors duration-200 cursor-pointer',
+                            form.is_open_to_work ? 'bg-primary' : 'bg-surface-3 border border-border'
+                          )}
+                        >
+                          <span className={cn(
+                            'absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200',
+                            form.is_open_to_work ? 'translate-x-5' : 'translate-x-0.5'
+                          )} />
+                        </div>
+                        <span className="text-sm text-text-secondary">
+                          {form.is_open_to_work ? 'Open to work — visible to employers' : 'Not looking for work'}
+                        </span>
+                      </label>
+
+                      {/* Time range */}
+                      {form.is_open_to_work && (
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-text-muted w-10">From</span>
+                            <input
+                              type="time"
+                              value={form.work_start || '08:00'}
+                              onChange={(e) => setForm((f) => ({ ...f, work_start: e.target.value }))}
+                              className="input py-1.5 px-3 text-sm w-32"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-text-muted w-10">To</span>
+                            <input
+                              type="time"
+                              value={form.work_end || '21:00'}
+                              onChange={(e) => setForm((f) => ({ ...f, work_end: e.target.value }))}
+                              className="input py-1.5 px-3 text-sm w-32"
+                            />
+                          </div>
+                          <p className="text-xs text-text-muted">
+                            Employers see "Available" when you're in this window
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {profile?.is_open_to_work ? (
+                        <>
+                          <span className="badge badge-success text-xs flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            Open to Work
+                          </span>
+                          {profile?.work_start && profile?.work_end ? (
+                            <span className="text-sm text-text-secondary flex items-center gap-1">
+                              <Clock size={12} className="text-text-muted" />
+                              {profile.work_start} – {profile.work_end}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-text-muted italic">No hours set — click Edit to add</span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="badge badge-muted text-xs">Not looking for work</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

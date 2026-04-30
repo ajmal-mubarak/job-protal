@@ -51,6 +51,9 @@ class JobSeeker(Base):
     location: Mapped[str | None] = mapped_column(String(255), nullable=True)
     experience_years: Mapped[int] = mapped_column(Integer, default=0)
     is_open_to_work: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Working hours — "08:00" / "21:00" format (local time set by seeker)
+    work_start: Mapped[str | None] = mapped_column(String(5), nullable=True)   # e.g. "08:00"
+    work_end: Mapped[str | None] = mapped_column(String(5), nullable=True)     # e.g. "21:00"
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     user: Mapped["User"] = relationship("User", back_populates="jobseeker_profile")  # noqa

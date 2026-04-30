@@ -78,6 +78,26 @@
     @apply w-full px-4 py-2.5 bg-surface-2 border border-border hover:border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-xl text-text-primary placeholder:text-text-muted outline-none transition-all duration-200 text-sm;
   }
 
+  /* Fix browser autofill white background override */
+  .input:-webkit-autofill,
+  .input:-webkit-autofill:hover,
+  .input:-webkit-autofill:focus,
+  .input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #1a1a24 inset !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+    caret-color: #f1f5f9;
+    border-color: #3a3a5c !important;
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #1a1a24 inset !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+    caret-color: #f1f5f9;
+  }
+
   .input-error {
     @apply border-error/50 focus:border-error focus:ring-error/20;
   }
@@ -180,4 +200,48 @@
   .animate-in {
     animation: fadeIn 0.3s ease-out, slideUp 0.3s ease-out;
   }
+
+  /* Thin scrollbar — used in chat messages & sidebar */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary/50;
+  }
+
+  /* Hidden scrollbar — still scrollable, no visible bar */
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Scroll FAB entrance animation */
+  .animate-fab-in {
+    animation: fabIn 0.2s ease-out forwards;
+  }
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(8px); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes fabIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.85); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
