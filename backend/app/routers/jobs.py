@@ -4,18 +4,18 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc, or_, and_
+from sqlalchemy import select, desc, or_, and_, func
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.models.job import Job, JobType
+from app.models.job import Job, JobType, Application
 from app.models.user import User, UserRole
 from app.models.employer import Employer, Recruiter
 from app.middleware.auth import get_current_user, require_employer_or_recruiter
 from app.utils.limiter import (
     check_job_post_limit, increment_job_post_count, get_user_premium_status
 )
-from app.schemas.jobs import JobCreate, JobUpdate, JobResponse, JobListResponse
+from app.schemas.jobs import JobCreate, JobUpdate, JobResponse, JobListResponse, MyJobResponse
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -37,17 +37,28 @@ async def _get_poster_profile(user: User, db: AsyncSession):
 # ── My Jobs (Employer/Recruiter) ──────────────────────────────────────────────
 # NOTE: Must be defined BEFORE /{job_id} to avoid FastAPI matching "my" as a UUID
 
-@router.get("/my/listings", response_model=list[JobResponse])
+@router.get("/my/listings", response_model=list[MyJobResponse])
 async def my_jobs(
     current_user: User = Depends(require_employer_or_recruiter),
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(Job)
+        select(Job, func.count(Application.id).label('applicant_count'))
+        .outerjoin(Application, Job.id == Application.job_id)
         .where(Job.posted_by_user_id == current_user.id)
+        .group_by(Job.id)
         .order_by(desc(Job.created_at))
     )
-    return result.scalars().all()
+    rows = result.all()
+    
+    # Map each (Job, count) to MyJobResponse dictionary
+    jobs_with_counts = []
+    for job, count in rows:
+        job_data = MyJobResponse.model_validate(job).model_dump()
+        job_data["applicant_count"] = count
+        jobs_with_counts.append(job_data)
+        
+    return jobs_with_counts
 
 
 # ── Get Single Job ────────────────────────────────────────────────────────────

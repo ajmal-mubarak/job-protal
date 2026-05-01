@@ -241,31 +241,61 @@ async def list_seekers(
     return out
 
 
-# ── Public seeker profile ─────────────────────────────────────────────────────
+# ── Public Profile ─────────────────────────────────────────────────────────────
 
-@router.get("/seekers/{user_id}", response_model=JobSeekerProfileOut)
-async def get_seeker_profile(
+@router.get("/public/{user_id}")
+async def get_public_profile(
     user_id: uuid.UUID,
-    current_user: User = Depends(require_employer_or_recruiter),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    r = await db.execute(select(JobSeeker).where(JobSeeker.user_id == user_id))
-    seeker = r.scalar_one_or_none()
-    if not seeker:
-        raise HTTPException(status_code=404, detail="Seeker not found")
+    """Get the public profile of any user."""
     u = await db.execute(select(User).where(User.id == user_id))
     user = u.scalar_one_or_none()
-    return {
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    base = {
         "user_id": str(user.id),
         "name": user.name,
         "avatar_url": user.avatar_url,
-        "headline": seeker.headline,
-        "resume_url": seeker.resume_url,
-        "skills": seeker.skills or [],
-        "location": seeker.location,
-        "experience_years": seeker.experience_years,
-        "is_open_to_work": seeker.is_open_to_work,
-        "work_start": seeker.work_start,
-        "work_end": seeker.work_end,
-        "is_currently_available": compute_available(seeker.work_start, seeker.work_end),
+        "role": user.role.value,
+        "is_verified": user.is_verified,
     }
+
+    if user.role == UserRole.jobseeker:
+        r = await db.execute(select(JobSeeker).where(JobSeeker.user_id == user_id))
+        seeker = r.scalar_one_or_none()
+        if seeker:
+            base.update({
+                "headline": seeker.headline,
+                "resume_url": seeker.resume_url,
+                "skills": seeker.skills or [],
+                "location": seeker.location,
+                "experience_years": seeker.experience_years,
+                "is_open_to_work": seeker.is_open_to_work,
+                "is_currently_available": compute_available(seeker.work_start, seeker.work_end),
+            })
+    elif user.role == UserRole.employer:
+        r = await db.execute(select(Employer).where(Employer.user_id == user_id))
+        employer = r.scalar_one_or_none()
+        if employer:
+            base.update({
+                "company_name": employer.company_name,
+                "company_logo_url": employer.company_logo_url,
+                "company_description": employer.company_description,
+                "website": employer.website,
+                "is_premium": employer.is_premium,
+            })
+    elif user.role == UserRole.recruiter:
+        r = await db.execute(select(Recruiter).where(Recruiter.user_id == user_id))
+        recruiter = r.scalar_one_or_none()
+        if recruiter:
+            base.update({
+                "agency_name": recruiter.agency_name,
+                "bio": recruiter.bio,
+                "is_premium": recruiter.is_premium,
+                "is_verified_badge": recruiter.is_verified_badge,
+            })
+
+    return base

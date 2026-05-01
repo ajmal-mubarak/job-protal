@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Zap, Check, Loader } from 'lucide-react'
 import { toast } from 'sonner'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import { paymentsApi } from '../../api/payments'
+import { profilesApi } from '../../api/profiles'
 import { useAuth } from '../../hooks/useAuth'
 
 const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID
@@ -41,6 +42,19 @@ export default function UpgradePage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
+  const [isPremium, setIsPremium] = useState(false)
+  const [fetchingPremium, setFetchingPremium] = useState(true)
+
+  useEffect(() => {
+    profilesApi.getMe()
+      .then(res => setIsPremium(res.data?.is_premium || false))
+      .catch(() => {})
+      .finally(() => setFetchingPremium(false))
+  }, [])
+
+  const handleDowngrade = () => {
+    toast.info('To cancel your subscription, please contact support at billing@jobportal.com')
+  }
 
   const handleUpgrade = async () => {
     if (!RAZORPAY_KEY) { toast.error('Payment gateway not configured'); return }
@@ -51,10 +65,7 @@ export default function UpgradePage() {
       if (!loaded) { toast.error('Failed to load payment gateway'); return }
 
       // Create order
-      const orderRes = await paymentsApi.createOrder({
-        purpose: 'recruiter_sub',
-        amount: 99900, // ₹999 in paise
-      })
+      const orderRes = await paymentsApi.subscribe()
       const { order_id, amount, currency } = orderRes.data
 
       const options = {
@@ -120,7 +131,13 @@ export default function UpgradePage() {
                   </li>
                 ))}
               </ul>
-              <button className="btn-secondary w-full" disabled>Current Plan</button>
+              <button 
+                className="btn-secondary w-full" 
+                disabled={!isPremium}
+                onClick={isPremium ? handleDowngrade : undefined}
+              >
+                {isPremium ? 'Cancel Subscription' : 'Current Plan'}
+              </button>
             </div>
 
             {/* Premium */}
@@ -140,9 +157,15 @@ export default function UpgradePage() {
                   </li>
                 ))}
               </ul>
-              <button id="upgrade-btn" onClick={handleUpgrade} disabled={loading} className="btn-primary w-full py-3">
-                {loading ? <Loader size={16} className="animate-spin" /> : <><Zap size={16} /> Upgrade Now</>}
-              </button>
+              {isPremium ? (
+                <button className="btn-secondary w-full py-3" disabled>
+                  Current Plan (Active)
+                </button>
+              ) : (
+                <button id="upgrade-btn" onClick={handleUpgrade} disabled={loading || fetchingPremium} className="btn-primary w-full py-3">
+                  {loading ? <Loader size={16} className="animate-spin" /> : <><Zap size={16} /> Upgrade Now</>}
+                </button>
+              )}
             </div>
           </div>
 

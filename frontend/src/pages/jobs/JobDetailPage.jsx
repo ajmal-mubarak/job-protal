@@ -493,18 +493,28 @@ export default function JobDetailPage() {
               </div>
             </div>
 
-            {/* Bottom Apply CTA */}
-            {canApply && (
-              <div className="card p-5 flex items-center justify-between gap-4 bg-gradient-to-r from-primary/10 to-accent/5 border-primary/20">
-                <div>
-                  <p className="text-sm font-semibold text-text-primary">Ready to apply?</p>
-                  <p className="text-xs text-text-muted mt-0.5">Your profile resume will be auto-attached</p>
+            {/* Poster Info */}
+            <div className="card p-6 mb-5">
+              <h2 className="font-bold text-text-primary mb-4 flex items-center gap-2">
+                <span className="w-1 h-5 bg-success rounded-full inline-block" />
+                About the Poster
+              </h2>
+              <div className="flex items-center justify-between gap-4 flex-wrap bg-surface-2 p-4 rounded-xl border border-border">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-surface-3 flex items-center justify-center">
+                    <Briefcase size={16} className="text-text-muted" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-text-primary text-sm">{job.company_name || 'Hiring Team'}</p>
+                    <p className="text-xs text-text-muted">Interested in learning more?</p>
+                  </div>
                 </div>
-                <button onClick={() => setShowApply(true)} className="btn-primary flex-shrink-0">
-                  <Send size={15} /> Apply Now
-                </button>
+                <Link to={`/profiles/${job.posted_by_user_id}`} className="btn-secondary btn-sm flex-shrink-0">
+                  <Users size={14} className="mr-1.5" /> See Profile
+                </Link>
               </div>
-            )}
+            </div>
+
 
             {/* Sign-in nudge */}
             {!isAuthenticated && (

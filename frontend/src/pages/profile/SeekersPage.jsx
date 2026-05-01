@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { Search, MessageSquare, MapPin, Briefcase, Loader, Filter } from 'lucide-react'
 import { toast } from 'sonner'
 import Navbar from '../../components/layout/Navbar'
@@ -50,16 +50,12 @@ function SeekerCard({ seeker, onMessage }) {
 
       {/* Actions */}
       <div className="flex items-center gap-2 pt-1 border-t border-border/50">
-        {seeker.resume_url && (
-          <a
-            href={seeker.resume_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-ghost btn-sm text-xs flex-1 text-center"
-          >
-            View Resume
-          </a>
-        )}
+        <Link
+          to={`/profiles/${seeker.user_id}`}
+          className="btn-ghost btn-sm text-xs flex-1 text-center"
+        >
+          View Profile
+        </Link>
         <button
           id={`msg-seeker-${seeker.user_id}`}
           onClick={() => onMessage(seeker)}

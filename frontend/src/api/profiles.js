@@ -28,6 +28,6 @@ export const profilesApi = {
   /** List job seekers — employer/recruiter only */
   listSeekers: (params) => api.get('/profiles/seekers', { params }),
 
-  /** Get a single job seeker's public profile */
-  getSeeker: (userId) => api.get(`/profiles/seekers/${userId}`),
+  /** Get any user's public profile */
+  getPublicProfile: (userId) => api.get(`/profiles/public/${userId}`),
 }

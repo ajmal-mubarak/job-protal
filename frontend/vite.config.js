@@ -23,7 +23,7 @@ export default defineConfig({
       '/chat': { target: 'http://localhost:8000', changeOrigin: true, bypass: spaBypass },
 
       // Pure API-only routes (no matching React Router path) — no bypass needed
-      '/jobs':          { target: 'http://localhost:8000', changeOrigin: true },
+      '/jobs':          { target: 'http://localhost:8000', changeOrigin: true, bypass: spaBypass },
       '/applications':  { target: 'http://localhost:8000', changeOrigin: true },
       '/notifications': { target: 'http://localhost:8000', changeOrigin: true },
       '/payments':      { target: 'http://localhost:8000', changeOrigin: true },

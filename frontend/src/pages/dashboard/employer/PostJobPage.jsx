@@ -9,6 +9,7 @@ import Navbar from '../../../components/layout/Navbar'
 import Sidebar from '../../../components/layout/Sidebar'
 import { jobsApi } from '../../../api/jobs'
 import { useAuth } from '../../../hooks/useAuth'
+import SkillInput from '../../../components/ui/SkillInput'
 
 const schema = z.object({
   title: z.string().min(3, 'Title required'),
@@ -43,7 +44,6 @@ export default function PostJobPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [skills, setSkills] = useState([])
-  const [skillInput, setSkillInput] = useState('')
   const [loading, setLoading] = useState(false)
 
   const isRecruiter = user?.role === 'recruiter'
@@ -54,14 +54,6 @@ export default function PostJobPage() {
     resolver: zodResolver(schema),
     defaultValues: { job_type: 'full_time' },
   })
-
-  const addSkill = () => {
-    const s = skillInput.trim()
-    if (s && !skills.includes(s)) setSkills([...skills, s])
-    setSkillInput('')
-  }
-
-  const removeSkill = (s) => setSkills(skills.filter((x) => x !== s))
 
   const onSubmit = async (data) => {
     setLoading(true)
@@ -135,30 +127,9 @@ export default function PostJobPage() {
               {errors.description && <p className="text-xs text-error">{errors.description.message}</p>}
             </div>
 
-            <div className="card p-6">
-              <h2 className="font-semibold text-text-primary mb-4">Required Skills</h2>
-              <div className="flex gap-2 mb-3">
-                <input
-                  id="post-skill-input"
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-                  placeholder="Type a skill and press Enter or Add"
-                  className="input flex-1"
-                />
-                <button type="button" onClick={addSkill} className="btn-secondary flex-shrink-0">Add</button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {skills.map((s) => (
-                  <span key={s} className="badge badge-primary gap-1">
-                    {s}
-                    <button type="button" onClick={() => removeSkill(s)} className="hover:text-error ml-0.5">
-                      <X size={10} />
-                    </button>
-                  </span>
-                ))}
-                {skills.length === 0 && <p className="text-xs text-text-muted">No skills added yet</p>}
-              </div>
+            <div className="card p-6 flex flex-col gap-4">
+              <h2 className="font-semibold text-text-primary mb-1">Required Skills</h2>
+              <SkillInput skills={skills} onChange={setSkills} />
             </div>
 
             <button id="post-job-submit" type="submit" disabled={loading} className="btn-primary py-3 text-base">

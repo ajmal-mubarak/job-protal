@@ -9,11 +9,15 @@ export default function JobCard({ job, className }) {
     <Link
       to={`/jobs/${job.id}`}
       className={cn(
-        'card-hover block p-5 group',
-        isFeatured && 'border-warning/30 bg-gradient-to-br from-warning/5 to-transparent',
+        'card-hover block p-5 group relative overflow-hidden transition-all duration-300',
+        isFeatured ? 'border-warning/50 bg-gradient-to-br from-warning/10 via-surface to-surface shadow-[0_0_15px_rgba(234,179,8,0.1)]' : '',
         className
       )}
     >
+      {/* Featured Accent Bar */}
+      {isFeatured && (
+        <div className="absolute top-0 left-0 w-1 h-full bg-warning/80" />
+      )}
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3">

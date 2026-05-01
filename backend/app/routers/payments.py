@@ -110,8 +110,11 @@ async def verify_payment(
         expires = now + timedelta(days=30)
         if current_user.role == UserRole.recruiter:
             profile = (await db.execute(select(Recruiter).where(Recruiter.user_id == current_user.id))).scalar_one_or_none()
+            if profile:
+                profile.is_verified_badge = True
         else:
             profile = (await db.execute(select(Employer).where(Employer.user_id == current_user.id))).scalar_one_or_none()
+        
         if profile:
             profile.is_premium = True
             profile.premium_expires_at = expires

@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import useAuthStore from '../../store/useAuthStore'
 import useNotificationStore from '../../store/useNotificationStore'
 import { authApi } from '../../api/auth'
+import { profilesApi } from '../../api/profiles'
 import { cn } from '../../lib/utils'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -66,6 +67,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
+  const [isPremium, setIsPremium] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const userMenuRef = useRef(null)
@@ -80,6 +82,14 @@ export default function Navbar() {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
+
+  useEffect(() => {
+    if (isAuthenticated && ['employer', 'recruiter'].includes(user?.role)) {
+      profilesApi.getMe()
+        .then(res => setIsPremium(res.data?.is_premium || false))
+        .catch(() => {})
+    }
+  }, [isAuthenticated, user?.role])
 
   const handleLogout = async () => {
     try {
@@ -180,8 +190,8 @@ export default function Navbar() {
                       <User size={14} /> My Profile
                     </Link>
                     {['employer', 'recruiter'].includes(user?.role) && (
-                      <Link to="/payment/upgrade" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-warning hover:bg-surface-2 transition-colors">
-                        <Zap size={14} /> Upgrade to Premium
+                      <Link to="/payment/upgrade" onClick={() => setUserMenuOpen(false)} className={cn("flex items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-surface-2", isPremium ? "text-primary" : "text-warning")}>
+                        <Zap size={14} /> {isPremium ? 'Premium Active' : 'Upgrade to Premium'}
                       </Link>
                     )}
                     <button

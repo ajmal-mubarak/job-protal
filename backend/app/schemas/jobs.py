@@ -52,6 +52,10 @@ class JobResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class MyJobResponse(JobResponse):
+    applicant_count: int = 0
+
+
 class JobListResponse(BaseModel):
     jobs: list[JobResponse]
     page: int

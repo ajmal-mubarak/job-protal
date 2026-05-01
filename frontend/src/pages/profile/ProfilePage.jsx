@@ -9,71 +9,7 @@ import { profilesApi } from '../../api/profiles'
 import { useAuth } from '../../hooks/useAuth'
 import { cn } from '../../lib/utils'
 
-const SKILL_SUGGESTIONS = [
-  'JavaScript', 'React', 'Python', 'FastAPI', 'Node.js', 'TypeScript',
-  'SQL', 'PostgreSQL', 'MongoDB', 'Docker', 'AWS', 'Git', 'Figma',
-  'Machine Learning', 'Data Analysis', 'Marketing', 'Sales', 'HR',
-]
-
-function SkillInput({ skills = [], onChange }) {
-  const [input, setInput] = useState('')
-  const [showSugs, setShowSugs] = useState(false)
-
-  const suggestions = SKILL_SUGGESTIONS.filter(
-    (s) => s.toLowerCase().includes(input.toLowerCase()) && !skills.includes(s)
-  )
-
-  const addSkill = (skill) => {
-    const trimmed = skill.trim()
-    if (trimmed && !skills.includes(trimmed)) onChange([...skills, trimmed])
-    setInput('')
-    setShowSugs(false)
-  }
-
-  const removeSkill = (skill) => onChange(skills.filter((s) => s !== skill))
-
-  return (
-    <div>
-      <div className="flex flex-wrap gap-2 mb-2">
-        {skills.map((skill) => (
-          <span key={skill} className="badge badge-primary flex items-center gap-1">
-            {skill}
-            <button onClick={() => removeSkill(skill)} className="hover:text-error ml-0.5">
-              <X size={10} />
-            </button>
-          </span>
-        ))}
-      </div>
-      <div className="relative">
-        <input
-          value={input}
-          onChange={(e) => { setInput(e.target.value); setShowSugs(true) }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && input.trim()) { e.preventDefault(); addSkill(input) }
-          }}
-          onFocus={() => setShowSugs(true)}
-          onBlur={() => setTimeout(() => setShowSugs(false), 150)}
-          placeholder="Add a skill and press Enter..."
-          className="input text-sm"
-        />
-        {showSugs && input && suggestions.length > 0 && (
-          <div className="absolute z-10 top-full left-0 right-0 card border border-border shadow-glow mt-1 max-h-40 overflow-y-auto">
-            {suggestions.slice(0, 6).map((s) => (
-              <button
-                key={s}
-                onMouseDown={() => addSkill(s)}
-                className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:bg-surface-2 hover:text-text-primary transition-colors"
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
+import SkillInput from '../../components/ui/SkillInput'
 function ResumeUpload({ resumeUrl, onUploaded }) {
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef()
@@ -355,8 +291,11 @@ export default function ProfilePage() {
                       type="number"
                       min={0}
                       max={50}
-                      value={form.experience_years ?? 0}
-                      onChange={(e) => setForm((f) => ({ ...f, experience_years: parseInt(e.target.value) || 0 }))}
+                      value={form.experience_years === 0 && form.experience_years !== '0' ? '' : form.experience_years}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setForm((f) => ({ ...f, experience_years: val === '' ? '' : parseInt(val, 10) }))
+                      }}
                       className="input w-32"
                     />
                   ) : (

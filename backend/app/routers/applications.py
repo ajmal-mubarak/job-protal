@@ -111,6 +111,21 @@ async def apply_to_job(
     # Update notification with application ID
     notification.meta["application_id"] = str(application.id)
     await db.commit()
+    await db.refresh(notification)
+
+    # Push real-time socket notification to the job poster
+    from app.sockets.events import push_notification
+    try:
+        await push_notification(
+            user_id=str(job.posted_by_user_id),
+            notif_id=str(notification.id),
+            notif_type="new_application",
+            title="New Application",
+            message=f"{current_user.name} applied for {job.title}",
+            meta={"job_id": str(job_id), "application_id": str(application.id)},
+        )
+    except Exception:
+        pass
 
     return application
 

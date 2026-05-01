@@ -147,6 +147,10 @@ export default function ApplicantsPage() {
                       </a>
                     )}
 
+                    <Link to={`/profiles/${app.applicant_user_id}`} className="btn-ghost btn-sm text-xs flex items-center gap-1">
+                      <User size={12} /> Profile
+                    </Link>
+
                     {/* AI Score button */}
                     {isRecruiter && (
                       <button
