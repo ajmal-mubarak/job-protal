@@ -15,7 +15,8 @@ export function useSocket() {
       return
     }
 
-    const socket = io('/', {
+    const backendUrl = import.meta.env.VITE_API_URL || 'https://job-protal-jbop.onrender.com'
+    const socket = io(backendUrl, {
       auth: { token: accessToken },
       transports: ['websocket'],
       path: '/socket.io',

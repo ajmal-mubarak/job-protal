@@ -44,14 +44,18 @@ async def save_file(file: UploadFile, subfolder: str) -> str:
     async with aiofiles.open(file_path, "wb") as f:
         await f.write(contents)
 
-    return f"/uploads/{subfolder}/{filename}"
+    return f"{settings.BACKEND_URL}/uploads/{subfolder}/{filename}"
 
 
 async def delete_file(url_path: str) -> None:
     """Delete a locally stored file by its URL path."""
-    if not url_path or not url_path.startswith("/uploads/"):
+    if not url_path or "/uploads/" not in url_path:
         return
-    file_path = url_path.lstrip("/")
+    # Extract the relative path part after /uploads/
+    try:
+        file_path = "uploads/" + url_path.split("/uploads/")[1]
+    except IndexError:
+        return
     if os.path.exists(file_path):
         os.remove(file_path)
 

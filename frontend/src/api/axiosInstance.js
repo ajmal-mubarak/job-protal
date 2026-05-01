@@ -2,7 +2,7 @@ import axios from 'axios'
 import useAuthStore from '../store/useAuthStore'
 
 const api = axios.create({
-  baseURL: '',           // Vite proxy handles routing to http://localhost:8000
+  baseURL: import.meta.env.VITE_API_URL || 'https://job-protal-jbop.onrender.com',
   withCredentials: true, // Send httpOnly refresh_token cookie automatically
 })
 

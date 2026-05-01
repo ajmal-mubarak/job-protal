@@ -9,7 +9,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "change-this-secret"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    FRONTEND_URL: str = "http://localhost:5173"
+    FRONTEND_URL: str = "https://jobprotal-kappa.vercel.app"
+    BACKEND_URL: str = "https://job-protal-jbop.onrender.com"
 
     # Admin Seed
     ADMIN_EMAIL: str = "admin@jobportal.com"
@@ -21,7 +22,7 @@ class Settings(BaseSettings):
     # Google OAuth
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
-    GOOGLE_REDIRECT_URI: str = "http://localhost:5173/auth/google/callback"
+    GOOGLE_REDIRECT_URI: str = "https://jobprotal-kappa.vercel.app/auth/google/callback"
 
     # Resend
     RESEND_API_KEY: str = ""
