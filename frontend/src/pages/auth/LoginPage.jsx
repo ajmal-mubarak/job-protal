@@ -14,7 +14,7 @@ const schema = z.object({
 })
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
-const GOOGLE_REDIRECT_URI = `${window.location.origin}/auth/google/callback`
+const GOOGLE_REDIRECT_URI = `${import.meta.env.VITE_API_URL || 'https://job-protal-jbop.onrender.com'}/auth/google/callback`
 const IS_DEV = import.meta.env.DEV
 
 export default function LoginPage() {

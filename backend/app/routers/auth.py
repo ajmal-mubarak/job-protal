@@ -331,6 +331,17 @@ async def reset_password(body: ResetPasswordRequest, db: AsyncSession = Depends(
 
 # ── Google OAuth ──────────────────────────────────────────────────────────────
 
+from fastapi.responses import RedirectResponse
+
+@router.get("/google/callback")
+async def google_callback_get(code: str):
+    """
+    Google redirects here first (since the backend URL is registered in Google Console).
+    We immediately redirect back to the frontend with the code, so the React app
+    can handle the UI loading state and trigger the POST request below.
+    """
+    return RedirectResponse(url=f"{settings.FRONTEND_URL}/auth/google/callback?code={code}")
+
 @router.post("/google/callback")
 async def google_callback(body: GoogleCallbackRequest, response: Response, db: AsyncSession = Depends(get_db)):
     """Exchange Google auth code for user info, then login or prompt role selection."""
@@ -340,7 +351,7 @@ async def google_callback(body: GoogleCallbackRequest, response: Response, db: A
             "code": body.code,
             "client_id": settings.GOOGLE_CLIENT_ID,
             "client_secret": settings.GOOGLE_CLIENT_SECRET,
-            "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+            "redirect_uri": f"{settings.BACKEND_URL}/auth/google/callback",
             "grant_type": "authorization_code",
         })
         if token_resp.status_code != 200:
