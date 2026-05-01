@@ -19,24 +19,25 @@ export default defineConfig({
     port: 5173,
     proxy: {
       // Routes that overlap with React Router paths need the bypass
-      '/auth': { target: 'http://localhost:8000', changeOrigin: true, bypass: spaBypass },
-      '/chat': { target: 'http://localhost:8000', changeOrigin: true, bypass: spaBypass },
+      '/auth': { target: 'https://job-protal-jbop.onrender.com', changeOrigin: true, secure: false, bypass: spaBypass },
+      '/chat': { target: 'https://job-protal-jbop.onrender.com', changeOrigin: true, secure: false, bypass: spaBypass },
 
       // Pure API-only routes (no matching React Router path) — no bypass needed
-      '/jobs':          { target: 'http://localhost:8000', changeOrigin: true, bypass: spaBypass },
-      '/applications':  { target: 'http://localhost:8000', changeOrigin: true },
-      '/notifications': { target: 'http://localhost:8000', changeOrigin: true },
-      '/payments':      { target: 'http://localhost:8000', changeOrigin: true },
-      '/admin':         { target: 'http://localhost:8000', changeOrigin: true },
-      '/upload':        { target: 'http://localhost:8000', changeOrigin: true },
-      '/profiles':      { target: 'http://localhost:8000', changeOrigin: true },
-      '/health':        { target: 'http://localhost:8000', changeOrigin: true },
-      '/uploads':       { target: 'http://localhost:8000', changeOrigin: true },
+      '/jobs':          { target: 'https://job-protal-jbop.onrender.com', changeOrigin: true, secure: false, bypass: spaBypass },
+      '/applications':  { target: 'https://job-protal-jbop.onrender.com', changeOrigin: true, secure: false },
+      '/notifications': { target: 'https://job-protal-jbop.onrender.com', changeOrigin: true, secure: false },
+      '/payments':      { target: 'https://job-protal-jbop.onrender.com', changeOrigin: true, secure: false },
+      '/admin':         { target: 'https://job-protal-jbop.onrender.com', changeOrigin: true, secure: false },
+      '/upload':        { target: 'https://job-protal-jbop.onrender.com', changeOrigin: true, secure: false },
+      '/profiles':      { target: 'https://job-protal-jbop.onrender.com', changeOrigin: true, secure: false },
+      '/health':        { target: 'https://job-protal-jbop.onrender.com', changeOrigin: true, secure: false },
+      '/uploads':       { target: 'https://job-protal-jbop.onrender.com', changeOrigin: true, secure: false },
 
       // WebSocket for Socket.io
       '/socket.io': {
-        target: 'http://localhost:8000',
+        target: 'https://job-protal-jbop.onrender.com',
         changeOrigin: true,
+        secure: false,
         ws: true,
       },
     },
