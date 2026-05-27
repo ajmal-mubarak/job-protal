@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { PlusCircle, Users, Briefcase, Zap, BarChart2, TrendingUp, Clock, Eye } from 'lucide-react'
+import { PlusCircle, Users, Briefcase, Zap, BarChart2, TrendingUp, Clock, Eye, Pencil } from 'lucide-react'
 import Navbar from '../../../components/layout/Navbar'
 import Sidebar from '../../../components/layout/Sidebar'
 import { jobsApi } from '../../../api/jobs'
@@ -118,11 +118,18 @@ export default function RecruiterDashboard() {
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0 self-start sm:self-center">
                     <Link
+                      to={`/dashboard/recruiter/jobs/${job.id}/edit`}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold text-text-secondary bg-surface-2 hover:bg-surface-3 border border-border transition-colors flex items-center gap-1"
+                      title="Edit job"
+                    >
+                      <Pencil size={13} /> Edit
+                    </Link>
+                    <Link
                       to={`/jobs/${job.id}`}
                       className="px-3 py-1.5 rounded-xl text-xs font-bold text-text-secondary bg-surface-2 hover:bg-surface-3 border border-border transition-colors flex items-center gap-1"
                       title="View public job detail"
                     >
-                      <Eye size={13} /> View Detail
+                      <Eye size={13} /> View
                     </Link>
                     <Link
                       to={`/dashboard/recruiter/jobs/${job.id}/applicants`}

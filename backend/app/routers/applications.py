@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Optional
+from pydantic import BaseModel
 
 from app.database import get_db
 from app.models.job import Job, Application, ApplicationStatus
@@ -260,6 +261,35 @@ async def withdraw_application(
 
     await db.delete(application)
     await db.commit()
+
+
+# ── Update Cover Letter (Job Seeker) ──────────────────────────────────────────
+
+class CoverLetterUpdate(BaseModel):
+    cover_letter: Optional[str] = None
+
+@router.patch("/{application_id}/cover-letter", response_model=ApplicationResponse)
+async def update_cover_letter(
+    application_id: uuid.UUID,
+    body: CoverLetterUpdate,
+    current_user: User = Depends(require_jobseeker),
+    db: AsyncSession = Depends(get_db),
+):
+    js_result = await db.execute(select(JobSeeker).where(JobSeeker.user_id == current_user.id))
+    jobseeker = js_result.scalar_one_or_none()
+
+    result = await db.execute(select(Application).where(Application.id == application_id))
+    application = result.scalar_one_or_none()
+
+    if not application or not jobseeker or str(application.jobseeker_id) != str(jobseeker.id):
+        raise HTTPException(status_code=404, detail="Application not found")
+    if application.status not in [ApplicationStatus.applied, ApplicationStatus.reviewing]:
+        raise HTTPException(status_code=400, detail="Cannot edit after shortlisting")
+
+    application.cover_letter = body.cover_letter
+    await db.commit()
+    await db.refresh(application)
+    return await _enrich_application(application, db)
 
 
 # ── AI Score (On-Demand) ──────────────────────────────────────────────────────

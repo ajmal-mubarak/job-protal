@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { PlusCircle, Users, Briefcase, Eye, BarChart2, Zap, TrendingUp, Clock } from 'lucide-react'
+import { PlusCircle, Users, Briefcase, Eye, BarChart2, Zap, TrendingUp, Clock, Pencil } from 'lucide-react'
 import Navbar from '../../../components/layout/Navbar'
 import Sidebar from '../../../components/layout/Sidebar'
 import JobCard from '../../../components/JobCard'
@@ -115,11 +115,18 @@ export default function EmployerDashboard() {
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0 self-start sm:self-center">
                     <Link
+                      to={`/dashboard/employer/jobs/${job.id}/edit`}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold text-text-secondary bg-surface-2 hover:bg-surface-3 border border-border transition-colors flex items-center gap-1"
+                      title="Edit job"
+                    >
+                      <Pencil size={13} /> Edit
+                    </Link>
+                    <Link
                       to={`/jobs/${job.id}`}
                       className="px-3 py-1.5 rounded-xl text-xs font-bold text-text-secondary bg-surface-2 hover:bg-surface-3 border border-border transition-colors flex items-center gap-1"
                       title="View public job detail"
                     >
-                      <Eye size={13} /> View Detail
+                      <Eye size={13} /> View
                     </Link>
                     <Link
                       to={`/dashboard/employer/jobs/${job.id}/applicants`}

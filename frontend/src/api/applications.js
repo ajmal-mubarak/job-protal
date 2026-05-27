@@ -23,6 +23,8 @@ export const applicationsApi = {
   myApplications: (params) => api.get('/applications/my', { params }),
   forJob: (jobId, params) => api.get(`/applications/job/${jobId}`, { params }),
   updateStatus: (id, status) => api.patch(`/applications/${id}/status`, { status }),
+  updateCoverLetter: (id, cover_letter) => api.patch(`/applications/${id}/cover-letter`, { cover_letter }),
+  withdraw: (id) => api.delete(`/applications/${id}`),
 
   // Backend path is /applications/{id}/ai-score (not /score)
   scoreResume: (id) => api.post(`/applications/${id}/ai-score`),

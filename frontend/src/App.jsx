@@ -27,6 +27,7 @@ import PostJobPage from './pages/dashboard/employer/PostJobPage'
 import ApplicantsPage from './pages/dashboard/employer/ApplicantsPage'
 import RecruiterDashboard from './pages/dashboard/recruiter/RecruiterDashboard'
 import JobSeekerDashboard from './pages/dashboard/jobseeker/JobSeekerDashboard'
+import EditJobPage from './pages/dashboard/employer/EditJobPage'
 
 // Pages — Profile
 import ProfilePage from './pages/profile/ProfilePage'
@@ -92,14 +93,16 @@ export default function App() {
         {/* ── Admin ───────────────────────────────────────────────────── */}
         <Route path="/dashboard/admin" element={<RoleRoute allowedRoles={['admin']}><AdminDashboard /></RoleRoute>} />
 
-        {/* ── Employer ────────────────────────────────────────────────── */}
+        {/* ── Employer ────────────────────────────────────────────── */}
         <Route path="/dashboard/employer" element={<RoleRoute allowedRoles={['employer']}><EmployerDashboard /></RoleRoute>} />
         <Route path="/dashboard/employer/post-job" element={<RoleRoute allowedRoles={['employer']}><PostJobPage /></RoleRoute>} />
+        <Route path="/dashboard/employer/jobs/:jobId/edit" element={<RoleRoute allowedRoles={['employer']}><EditJobPage /></RoleRoute>} />
         <Route path="/dashboard/employer/jobs/:jobId/applicants" element={<RoleRoute allowedRoles={['employer']}><ApplicantsPage /></RoleRoute>} />
 
-        {/* ── Recruiter ───────────────────────────────────────────────── */}
+        {/* ── Recruiter ───────────────────────────────────────────── */}
         <Route path="/dashboard/recruiter" element={<RoleRoute allowedRoles={['recruiter']}><RecruiterDashboard /></RoleRoute>} />
         <Route path="/dashboard/recruiter/post-job" element={<RoleRoute allowedRoles={['recruiter']}><PostJobPage /></RoleRoute>} />
+        <Route path="/dashboard/recruiter/jobs/:jobId/edit" element={<RoleRoute allowedRoles={['recruiter']}><EditJobPage /></RoleRoute>} />
         <Route path="/dashboard/recruiter/jobs/:jobId/applicants" element={<RoleRoute allowedRoles={['recruiter']}><ApplicantsPage /></RoleRoute>} />
 
         {/* ── Job Seeker ──────────────────────────────────────────────── */}
