@@ -126,7 +126,9 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-1">
           <Link to="/" className={navLinkClass(isActive('/'))}>Home</Link>
           <Link to="/jobs" className={navLinkClass(isActive('/jobs'))}>Browse Jobs</Link>
-          <Link to="/seekers" className={navLinkClass(isActive('/seekers'))}>Browse Seekers</Link>
+          {(!isAuthenticated || user?.role !== 'jobseeker') && (
+            <Link to="/seekers" className={navLinkClass(isActive('/seekers'))}>Browse Seekers</Link>
+          )}
           {isAuthenticated && <Link to={dashboardLink} className={navLinkClass(isActive('/dashboard'))}>Dashboard</Link>}
           {isAuthenticated && ['employer', 'recruiter', 'jobseeker'].includes(user?.role) && (
             <Link to="/chat" className={navLinkClass(isActive('/chat'))}>Messages</Link>
@@ -198,7 +200,9 @@ export default function Navbar() {
         style={{ borderTop: '1px solid rgba(0,0,0,0.05)', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(24px)' }}>
         <div className="px-4 py-4 flex flex-col gap-1">
           <Link to="/jobs" onClick={() => setMobileOpen(false)} className="nav-item">Browse Jobs</Link>
-          <Link to="/seekers" onClick={() => setMobileOpen(false)} className="nav-item">Browse Seekers</Link>
+          {(!isAuthenticated || user?.role !== 'jobseeker') && (
+            <Link to="/seekers" onClick={() => setMobileOpen(false)} className="nav-item">Browse Seekers</Link>
+          )}
           {isAuthenticated && <Link to={dashboardLink} onClick={() => setMobileOpen(false)} className="nav-item">Dashboard</Link>}
           {isAuthenticated && <Link to="/profile" onClick={() => setMobileOpen(false)} className="nav-item">My Profile</Link>}
           {isAuthenticated && ['employer', 'recruiter', 'jobseeker'].includes(user?.role) && <Link to="/chat" onClick={() => setMobileOpen(false)} className="nav-item">Messages</Link>}
