@@ -3,7 +3,7 @@ import json
 from app.config import settings
 
 _client = None  # Lazy-initialized on first use — avoids blocking startup
-_MODEL = "gemini-2.5-flash"
+_MODEL = "gemini-1.5-flash"
 
 
 def _get_client():

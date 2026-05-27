@@ -60,11 +60,15 @@ export default function ApplicantsPage() {
     setScoring((s) => ({ ...s, [appId]: true }))
     try {
       const res = await applicationsApi.scoreResume(appId)
-      const score = res.data?.ai_score
-      setApplications((prev) => prev.map((a) => a.id === appId ? { ...a, ai_score: score } : a))
-      toast.success(`AI Score: ${score}/100`)
+      const updated = res.data
+      setApplications((prev) => prev.map((a) => a.id === appId ? {
+        ...a,
+        ai_score: updated.ai_score,
+        ai_feedback: updated.ai_feedback,
+      } : a))
+      toast.success(`AI Score: ${updated.ai_score}/100`)
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Scoring failed')
+      toast.error(err?.response?.data?.detail || 'AI scoring failed')
     } finally {
       setScoring((s) => ({ ...s, [appId]: false }))
     }
@@ -140,6 +144,49 @@ export default function ApplicantsPage() {
                     <p className="text-xs text-text-secondary bg-surface-2 rounded-lg p-3 mb-3 line-clamp-2">{app.cover_letter}</p>
                   )}
 
+                  {/* AI Feedback Panel */}
+                  {app.ai_score != null && (() => {
+                    let fb = null
+                    try { fb = app.ai_feedback ? JSON.parse(app.ai_feedback) : null } catch {}
+                    if (!fb) return null
+                    return (
+                      <div className="bg-surface-2 border border-border rounded-xl p-4 mb-3 text-xs">
+                        {/* Score bar */}
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="font-bold text-text-primary text-sm">AI Match</span>
+                          <div className="flex-1 h-2 bg-border rounded-full overflow-hidden">
+                            <div
+                              className={cn('h-full rounded-full transition-all', app.ai_score >= 70 ? 'bg-emerald-500' : app.ai_score >= 40 ? 'bg-amber-500' : 'bg-rose-500')}
+                              style={{ width: `${app.ai_score}%` }}
+                            />
+                          </div>
+                          <span className={cn('font-extrabold text-sm', app.ai_score >= 70 ? 'text-emerald-600' : app.ai_score >= 40 ? 'text-amber-600' : 'text-rose-600')}>
+                            {app.ai_score}/100
+                          </span>
+                        </div>
+                        {fb.summary && <p className="text-text-secondary mb-3 leading-relaxed">{fb.summary}</p>}
+                        <div className="grid grid-cols-2 gap-3">
+                          {fb.strengths?.length > 0 && (
+                            <div>
+                              <p className="font-bold text-emerald-600 mb-1.5">✓ Strengths</p>
+                              <ul className="space-y-1">
+                                {fb.strengths.map((s, i) => <li key={i} className="text-text-secondary">• {s}</li>)}
+                              </ul>
+                            </div>
+                          )}
+                          {fb.gaps?.length > 0 && (
+                            <div>
+                              <p className="font-bold text-rose-600 mb-1.5">✗ Gaps</p>
+                              <ul className="space-y-1">
+                                {fb.gaps.map((g, i) => <li key={i} className="text-text-secondary">• {g}</li>)}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })()}
+
                   <div className="flex flex-wrap items-center gap-2">
                     {app.resume_url && (
                       <a href={app.resume_url} target="_blank" rel="noopener noreferrer" className="btn-ghost btn-sm text-xs">
@@ -151,17 +198,16 @@ export default function ApplicantsPage() {
                       <User size={12} /> Profile
                     </Link>
 
-                    {/* AI Score button */}
-                    {isRecruiter && (
-                      <button
-                        onClick={() => scoreResume(app.id)}
-                        disabled={scoring[app.id]}
-                        className="btn-secondary btn-sm text-xs"
-                      >
-                        {scoring[app.id] ? <Loader size={12} className="animate-spin" /> : <Zap size={12} />}
-                        {app.ai_score != null ? 'Re-score' : 'AI Score'}
-                      </button>
-                    )}
+                    {/* AI Score button — visible to employer and recruiter */}
+                    <button
+                      id={`ai-score-btn-${app.id}`}
+                      onClick={() => scoreResume(app.id)}
+                      disabled={scoring[app.id]}
+                      className="btn-secondary btn-sm text-xs"
+                    >
+                      {scoring[app.id] ? <Loader size={12} className="animate-spin" /> : <Zap size={12} />}
+                      {app.ai_score != null ? 'Re-score' : 'AI Score'}
+                    </button>
 
                     {/* Message applicant */}
                     <button
