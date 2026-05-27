@@ -193,7 +193,7 @@ async def update_my_profile(
     return {"message": "Profile updated"}
 
 
-# ── Browse Job Seekers (employer/recruiter only) ───────────────────────────────
+# ── Browse Job Seekers (all authenticated users) ─────────────────────────────
 
 @router.get("/seekers", response_model=list[JobSeekerProfileOut])
 async def list_seekers(
@@ -204,7 +204,7 @@ async def list_seekers(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Browse job seeker profiles — for employers and recruiters."""
+    """Browse job seeker profiles — open to all authenticated users (employers, recruiters, and job seekers)."""
     query = (
         select(JobSeeker, User)
         .join(User, User.id == JobSeeker.user_id)
