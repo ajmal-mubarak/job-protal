@@ -28,7 +28,8 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = ""
     FROM_EMAIL: str = "onboarding@resend.dev"
 
-    # Gemini
+    # AI — Groq (primary, free & fast) + Gemini (legacy)
+    GROQ_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
 
     # Razorpay
