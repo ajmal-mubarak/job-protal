@@ -95,6 +95,7 @@ export default function SeekersPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuthStore()
   const [seekers, setSeekers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [apiError, setApiError] = useState(null)
   const [messaging, setMessaging] = useState(null)
   const [searchInput, setSearchInput] = useState('')
   const [skills, setSkills] = useState('')
@@ -103,6 +104,7 @@ export default function SeekersPage() {
 
   const fetchSeekers = async (params = {}) => {
     setLoading(true)
+    setApiError(null)
     try {
       const effectiveOpenOnly = params.openOnly !== undefined ? params.openOnly : openOnly
       const queryParams = {
@@ -115,8 +117,17 @@ export default function SeekersPage() {
       }
       const res = await profilesApi.listSeekers(queryParams)
       setSeekers(res.data || [])
-    } catch {
-      toast.error('Failed to load job seekers')
+    } catch (err) {
+      const detail = err?.response?.data?.detail
+      const status = err?.response?.status
+      if (status === 403 && detail === 'Email not verified') {
+        setApiError('verify')
+      } else {
+        const msg = detail || 'Failed to load job seekers'
+        setApiError(msg)
+        toast.error(msg)
+      }
+      setSeekers([])
     } finally {
       setLoading(false)
     }
@@ -269,6 +280,30 @@ export default function SeekersPage() {
           <div className="flex flex-col items-center justify-center py-24 gap-3 bg-white border border-slate-100 rounded-3xl">
             <Loader size={32} className="text-indigo-600 animate-spin" />
             <p className="text-xs text-slate-400 font-medium">Loading talented profiles...</p>
+          </div>
+        ) : apiError === 'verify' ? (
+          <div className="text-center py-20 bg-white border border-amber-100 rounded-3xl p-8 shadow-[0_8px_30px_rgba(15,23,42,0.01)]">
+            <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4 border border-amber-100">
+              <span className="text-2xl">✉️</span>
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Please verify your email first</h3>
+            <p className="text-slate-400 text-sm max-w-md mx-auto mb-4">
+              Your email address needs to be verified before you can browse job seekers. Check your inbox for the verification link.
+            </p>
+            <Link to="/verify" className="inline-block px-5 py-2.5 rounded-xl font-bold text-sm bg-amber-500 text-white hover:bg-amber-600 transition-all">
+              Verify Email
+            </Link>
+          </div>
+        ) : apiError ? (
+          <div className="text-center py-20 bg-white border border-red-100 rounded-3xl p-8">
+            <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4 border border-red-100">
+              <span className="text-2xl">⚠️</span>
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Could not load seekers</h3>
+            <p className="text-slate-400 text-sm max-w-md mx-auto mb-4">{apiError}</p>
+            <button onClick={() => fetchSeekers()} className="px-5 py-2.5 rounded-xl font-bold text-sm bg-indigo-600 text-white hover:bg-indigo-700 transition-all">
+              Try Again
+            </button>
           </div>
         ) : displayed.length === 0 ? (
           <div className="text-center py-20 bg-white border border-slate-100 rounded-3xl p-8 shadow-[0_8px_30px_rgba(15,23,42,0.01)]">
