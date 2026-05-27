@@ -99,17 +99,22 @@ export default function SeekersPage() {
   const [searchInput, setSearchInput] = useState('')
   const [skills, setSkills] = useState('')
   const [location, setLocation] = useState('')
-  const [openOnly, setOpenOnly] = useState(true)
+  const [openOnly, setOpenOnly] = useState(false)
 
   const fetchSeekers = async (params = {}) => {
     if (!isAuthenticated) return
     setLoading(true)
     try {
-      const res = await profilesApi.listSeekers({
-        open_to_work: params.openOnly ?? openOnly,
+      const effectiveOpenOnly = params.openOnly !== undefined ? params.openOnly : openOnly
+      const queryParams = {
         skills: params.skills ?? (skills || undefined),
         location: params.location ?? (location || undefined),
-      })
+      }
+      // Only send open_to_work=true if checkbox is checked — omitting means show all
+      if (effectiveOpenOnly) {
+        queryParams.open_to_work = true
+      }
+      const res = await profilesApi.listSeekers(queryParams)
       setSeekers(res.data || [])
     } catch {
       toast.error('Failed to load job seekers')

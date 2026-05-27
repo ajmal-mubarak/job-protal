@@ -2,9 +2,11 @@
 import uuid
 from typing import Optional
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func, cast
+from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy import String
 from pydantic import BaseModel
 
 from app.database import get_db
@@ -197,8 +199,8 @@ async def update_my_profile(
 async def list_seekers(
     skills: Optional[str] = None,
     location: Optional[str] = None,
-    open_to_work: bool = True,
-    limit: int = 30,
+    open_to_work: Optional[bool] = None,
+    limit: int = 50,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -208,14 +210,21 @@ async def list_seekers(
         .join(User, User.id == JobSeeker.user_id)
         .where(User.is_active == True)
     )
-    if open_to_work:
+    # Only filter by open_to_work if explicitly requested (True → open only, None → show all)
+    if open_to_work is True:
         query = query.where(JobSeeker.is_open_to_work == True)
     if location:
         query = query.where(JobSeeker.location.ilike(f"%{location}%"))
     if skills:
+        # Convert the ARRAY column to text and do a case-insensitive search
         skill_list = [s.strip().lower() for s in skills.split(",") if s.strip()]
         for skill in skill_list:
-            query = query.where(JobSeeker.skills.any(skill))
+            # array_to_string converts ['Python','React'] → 'python,react' for ilike matching
+            query = query.where(
+                func.array_to_string(
+                    cast(JobSeeker.skills, ARRAY(String)), ","
+                ).ilike(f"%{skill}%")
+            )
     query = query.limit(limit)
 
     results = await db.execute(query)
