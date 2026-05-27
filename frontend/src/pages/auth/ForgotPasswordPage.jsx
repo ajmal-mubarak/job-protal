@@ -28,13 +28,13 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-hero-glow pointer-events-none" />
+      <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5 pointer-events-none" />
       <div className="w-full max-w-sm animate-slide-up">
         <Link to="/" className="flex items-center justify-center gap-2 mb-8">
           <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-glow">
             <Briefcase size={18} className="text-white" />
           </div>
-          <span className="font-bold text-xl">Job<span className="text-primary-light">Portal</span></span>
+          <span className="font-bold text-xl">Job<span className="text-primary">Portal</span></span>
         </Link>
 
         <div className="card p-8 shadow-glow-sm">
@@ -77,3 +77,5 @@ export default function ForgotPasswordPage() {
     </div>
   )
 }
+
+

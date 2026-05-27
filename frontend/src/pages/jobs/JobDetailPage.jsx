@@ -252,10 +252,10 @@ function RelatedJobsSidebar({ currentJob, onModeChange }) {
     return (
       <div className="flex flex-col gap-3">
         {[1, 2, 3].map(i => (
-          <div key={i} className="card p-4 animate-pulse">
-            <div className="h-3 bg-surface-3 rounded w-3/4 mb-2" />
-            <div className="h-2 bg-surface-3 rounded w-1/2 mb-3" />
-            <div className="h-2 bg-surface-3 rounded w-1/3" />
+          <div key={i} className="bg-white border border-slate-100 rounded-2xl p-4 animate-pulse">
+            <div className="h-3 bg-slate-100 rounded w-3/4 mb-2" />
+            <div className="h-2 bg-slate-100 rounded w-1/2 mb-3" />
+            <div className="h-2 bg-slate-100 rounded w-1/3" />
           </div>
         ))}
       </div>
@@ -264,13 +264,12 @@ function RelatedJobsSidebar({ currentJob, onModeChange }) {
 
   if (jobs.length === 0) {
     return (
-      <div className="card p-5 text-center">
-        <Briefcase size={24} className="text-text-muted mx-auto mb-2" />
-        <p className="text-xs text-text-muted">No other jobs found</p>
+      <div className="bg-white border border-slate-100 rounded-2xl p-5 text-center shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
+        <Briefcase size={24} className="text-slate-300 mx-auto mb-2" />
+        <p className="text-xs font-semibold text-slate-400">No other jobs found</p>
       </div>
     )
   }
-
 
   return (
     <div className="flex flex-col gap-3">
@@ -282,41 +281,42 @@ function RelatedJobsSidebar({ currentJob, onModeChange }) {
           <Link
             key={job.id}
             to={`/jobs/${job.id}`}
-            className="card p-4 hover:border-border-light hover:shadow-card-hover hover:translate-y-[-1px] transition-all duration-200 group block"
+            className="bg-white border border-slate-100 hover:border-indigo-100 rounded-2xl p-4 shadow-[0_4px_12px_rgba(15,23,42,0.01)] hover:shadow-[0_8px_24px_rgba(99,102,241,0.04)] hover:-translate-y-0.5 transition-all duration-200 group block"
           >
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-surface-3 border border-border flex items-center justify-center flex-shrink-0">
-                <Briefcase size={14} className="text-text-muted" />
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.1)' }}>
+                <Briefcase size={15} className="text-indigo-600" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-1">
-                  <p className="text-sm font-semibold text-text-primary group-hover:text-primary-light transition-colors line-clamp-1">
+                  <p className="text-xs font-bold text-slate-700 group-hover:text-indigo-600 transition-colors line-clamp-1">
                     {job.title}
                   </p>
-                  <ChevronRight size={13} className="text-text-muted flex-shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ChevronRight size={13} className="text-slate-400 flex-shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <p className="text-xs text-text-muted mt-0.5 truncate">{job.company_name || 'Confidential'}</p>
+                <p className="text-[11px] font-medium text-slate-400 mt-0.5 truncate">{job.company_name || 'Confidential'}</p>
 
                 {/* Salary */}
-                <p className="text-xs font-semibold text-primary-light mt-2">
+                <p className="text-xs font-bold text-indigo-600 mt-2">
                   {formatSalary(job.salary_min, job.salary_max)}
                 </p>
 
                 {/* Badges */}
                 <div className="flex flex-wrap items-center gap-1.5 mt-2">
                   {hasSkillMatch && (
-                    <span className="inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 bg-primary/10 text-primary-light rounded-full border border-primary/20">
-                      <Sparkles size={8} /> Skill match
+                    <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded border border-indigo-100/50">
+                      <Sparkles size={8} /> Match
                     </span>
                   )}
                   {job.job_type && (
-                    <span className="text-[10px] text-text-muted bg-surface-3 px-1.5 py-0.5 rounded-full">
+                    <span className="text-[9px] font-semibold text-slate-500 bg-slate-100/60 px-1.5 py-0.5 rounded border border-slate-200/20">
                       {jobTypeLabels[job.job_type] || job.job_type}
                     </span>
                   )}
                   {job.is_featured && (
-                    <span className="text-[10px] text-warning bg-warning/10 px-1.5 py-0.5 rounded-full border border-warning/20">
-                      ★ Featured
+                    <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/50">
+                      Featured
                     </span>
                   )}
                 </div>
@@ -326,7 +326,7 @@ function RelatedJobsSidebar({ currentJob, onModeChange }) {
         )
       })}
 
-      <Link to="/jobs" className="text-xs text-primary hover:text-primary-light text-center flex items-center justify-center gap-1 py-1 transition-colors">
+      <Link to="/jobs" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 text-center flex items-center justify-center gap-1 py-2 bg-slate-50 hover:bg-slate-100/80 border border-slate-100 rounded-xl transition-colors mt-1">
         Browse all jobs <ChevronRight size={12} />
       </Link>
     </div>
@@ -353,8 +353,9 @@ export default function JobDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader size={32} className="text-primary animate-spin" />
+      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center gap-3">
+        <Loader size={32} className="text-indigo-600 animate-spin" />
+        <p className="text-xs text-slate-400 font-medium animate-pulse">Loading detailed description...</p>
       </div>
     )
   }
@@ -362,13 +363,16 @@ export default function JobDetailPage() {
   if (!job) return null
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-[#f8fafc]">
       <Navbar />
 
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-10 animate-fade-in">
         {/* Back button */}
-        <button onClick={() => navigate(-1)} className="btn-ghost text-sm mb-6">
-          <ArrowLeft size={15} /> Back to jobs
+        <button 
+          onClick={() => navigate(-1)} 
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200/80 hover:bg-slate-50 hover:border-slate-300 text-slate-600 hover:text-slate-800 text-xs font-bold rounded-xl transition-all mb-6 shadow-sm"
+        >
+          <ArrowLeft size={13} /> Back to jobs
         </button>
 
         {/* Two-column layout: related sidebar LEFT, main detail RIGHT */}
@@ -377,15 +381,15 @@ export default function JobDetailPage() {
           {/* ── LEFT: Related Jobs Sidebar ─────────────────────────────────── */}
           <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0">
             <div className="lg:sticky lg:top-24">
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-3 bg-white p-3 rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
                 {sidebarIsRandom
                   ? <span className="text-sm">🎲</span>
-                  : <Sparkles size={14} className="text-primary-light" />}
-                <h2 className="text-sm font-semibold text-text-primary">
+                  : <Sparkles size={14} className="text-indigo-500" />}
+                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   {sidebarIsRandom ? 'You Might Like' : 'Related Jobs'}
                 </h2>
                 {sidebarIsRandom && (
-                  <span className="text-[10px] text-text-muted bg-surface-3 px-1.5 py-0.5 rounded-full ml-auto">Random picks</span>
+                  <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full ml-auto">Random</span>
                 )}
               </div>
               <RelatedJobsSidebar currentJob={job} onModeChange={setSidebarIsRandom} />
@@ -393,29 +397,33 @@ export default function JobDetailPage() {
           </aside>
 
           {/* ── RIGHT: Main Job Detail ─────────────────────────────────────── */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 w-full">
 
             {/* Header card */}
             <div className={cn(
-              'card p-7 mb-5',
-              job.is_featured && 'border-warning/30 bg-gradient-to-br from-warning/5 via-transparent to-transparent'
+              'bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 mb-6 shadow-[0_8px_30px_rgba(15,23,42,0.015)] relative overflow-hidden',
+              job.is_featured && 'border-amber-200 bg-gradient-to-br from-amber-50/10 via-white to-white'
             )}>
-              <div className="flex items-start gap-5 mb-6">
+              {job.is_featured && (
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-amber-400 to-amber-500" />
+              )}
+
+              <div className="flex items-start gap-4 sm:gap-5 mb-6">
                 {/* Company Logo placeholder */}
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-surface-2 to-surface-3 border border-border flex items-center justify-center flex-shrink-0 shadow-card">
-                  <Briefcase size={28} className="text-text-muted" />
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-indigo-50 to-indigo-100/30 border border-slate-100 flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <Briefcase size={28} className="text-indigo-600" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start gap-3 flex-wrap">
                     <div className="flex-1 min-w-0">
-                      <h1 className="text-2xl sm:text-3xl font-black text-text-primary leading-tight">
+                      <h1 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight leading-tight">
                         {job.title}
                       </h1>
-                      <p className="text-base text-text-secondary mt-1 font-medium">{job.company_name || 'Confidential Company'}</p>
+                      <p className="text-sm text-slate-500 mt-1 font-semibold">{job.company_name || 'Confidential Company'}</p>
                     </div>
                     {job.is_featured && (
-                      <span className="badge-featured flex-shrink-0 mt-1">
-                        <Star size={11} fill="currentColor" /> Featured
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 flex-shrink-0 uppercase tracking-wider">
+                        <Star size={11} fill="currentColor" className="text-amber-500" /> Featured
                       </span>
                     )}
                   </div>
@@ -423,42 +431,45 @@ export default function JobDetailPage() {
               </div>
 
               {/* Meta info row */}
-              <div className="flex flex-wrap gap-3 mb-6">
+              <div className="flex flex-wrap gap-2.5 mb-6">
                 {job.location && (
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-2 border border-border rounded-xl text-sm text-text-secondary">
-                    <MapPin size={13} className="text-primary-light" /> {job.location}
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-semibold text-slate-600">
+                    <MapPin size={13} className="text-indigo-500" /> {job.location}
                   </div>
                 )}
                 {job.job_type && (
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-2 border border-border rounded-xl text-sm text-text-secondary">
-                    <TrendingUp size={13} className="text-accent-light" /> {jobTypeLabels[job.job_type] || job.job_type}
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-semibold text-slate-600">
+                    <Briefcase size={13} className="text-violet-500" /> {jobTypeLabels[job.job_type] || job.job_type}
                   </div>
                 )}
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-2 border border-border rounded-xl text-sm text-text-secondary">
-                  <Clock size={13} className="text-text-muted" /> Posted {timeAgo(job.created_at)}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-medium text-slate-400">
+                  <Clock size={13} /> Posted {timeAgo(job.created_at)}
                 </div>
               </div>
 
               {/* Salary + CTA */}
-              <div className="flex items-center justify-between flex-wrap gap-4 p-5 bg-surface-2 border border-border rounded-2xl">
+              <div className="flex items-center justify-between flex-wrap gap-4 p-5 bg-slate-50 border border-slate-100 rounded-2xl">
                 <div>
-                  <p className="text-xs text-text-muted mb-1 font-medium uppercase tracking-wide">Salary</p>
-                  <p className="text-2xl font-black text-primary-light">{formatSalary(job.salary_min, job.salary_max)}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1.5">Offered Salary</p>
+                  <p className="text-xl font-black bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">{formatSalary(job.salary_min, job.salary_max)}</p>
                 </div>
                 {canApply ? (
                   <button
                     id="apply-btn"
                     onClick={() => setShowApply(true)}
-                    className="btn-primary px-8 py-3 text-base shadow-glow"
+                    className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md shadow-indigo-100 hover:shadow-indigo-200 transition-all flex items-center gap-1.5"
                   >
-                    <Send size={17} /> Apply Now
+                    <Send size={15} /> Apply Now
                   </button>
                 ) : !isAuthenticated ? (
-                  <Link to="/auth/login" className="btn-primary px-8 py-3 text-base shadow-glow">
+                  <Link 
+                    to="/auth/login" 
+                    className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md shadow-indigo-100 hover:shadow-indigo-200 transition-all flex items-center gap-1.5"
+                  >
                     Login to Apply
                   </Link>
                 ) : (
-                  <span className="text-xs text-text-muted bg-surface-3 border border-border px-4 py-2.5 rounded-xl">
+                  <span className="text-xs font-bold text-slate-400 bg-slate-100 border border-slate-200/50 px-4 py-2.5 rounded-xl">
                     Not eligible to apply
                   </span>
                 )}
@@ -467,14 +478,14 @@ export default function JobDetailPage() {
 
             {/* Skills */}
             {job.skills_required?.length > 0 && (
-              <div className="card p-6 mb-5">
-                <h2 className="font-bold text-text-primary mb-4 flex items-center gap-2">
-                  <span className="w-1 h-5 bg-primary rounded-full inline-block" />
-                  Required Skills
+              <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 mb-6 shadow-[0_8px_30px_rgba(15,23,42,0.015)]">
+                <h2 className="font-extrabold text-slate-800 text-[15px] mb-4 flex items-center gap-2">
+                  <span className="w-1.5 h-4.5 bg-indigo-600 rounded-full inline-block" />
+                  Required Professional Skills
                 </h2>
                 <div className="flex flex-wrap gap-2">
                   {job.skills_required.map((skill) => (
-                    <span key={skill} className="badge badge-primary text-sm px-3 py-1">
+                    <span key={skill} className="px-3.5 py-1.5 rounded-xl bg-indigo-50/50 text-indigo-700 font-bold text-xs border border-indigo-100/50">
                       {skill}
                     </span>
                   ))}
@@ -483,53 +494,52 @@ export default function JobDetailPage() {
             )}
 
             {/* Description */}
-            <div className="card p-6 mb-5">
-              <h2 className="font-bold text-text-primary mb-4 flex items-center gap-2">
-                <span className="w-1 h-5 bg-accent rounded-full inline-block" />
-                Job Description
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 mb-6 shadow-[0_8px_30px_rgba(15,23,42,0.015)]">
+              <h2 className="font-extrabold text-slate-800 text-[15px] mb-4 flex items-center gap-2">
+                <span className="w-1.5 h-4.5 bg-violet-600 rounded-full inline-block" />
+                Role Description & Specifications
               </h2>
-              <div className="text-sm text-text-secondary leading-relaxed whitespace-pre-line prose-sm">
+              <div className="text-sm text-slate-600 leading-relaxed whitespace-pre-line prose-sm font-medium">
                 {job.description || 'No description provided.'}
               </div>
             </div>
 
             {/* Poster Info */}
-            <div className="card p-6 mb-5">
-              <h2 className="font-bold text-text-primary mb-4 flex items-center gap-2">
-                <span className="w-1 h-5 bg-success rounded-full inline-block" />
-                About the Poster
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 mb-6 shadow-[0_8px_30px_rgba(15,23,42,0.015)]">
+              <h2 className="font-extrabold text-slate-800 text-[15px] mb-4 flex items-center gap-2">
+                <span className="w-1.5 h-4.5 bg-emerald-500 rounded-full inline-block" />
+                About the Organization
               </h2>
-              <div className="flex items-center justify-between gap-4 flex-wrap bg-surface-2 p-4 rounded-xl border border-border">
+              <div className="flex items-center justify-between gap-4 flex-wrap bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-surface-3 flex items-center justify-center">
-                    <Briefcase size={16} className="text-text-muted" />
+                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-slate-200/60">
+                    <Briefcase size={16} className="text-indigo-600" />
                   </div>
                   <div>
-                    <p className="font-semibold text-text-primary text-sm">{job.company_name || 'Hiring Team'}</p>
-                    <p className="text-xs text-text-muted">Interested in learning more?</p>
+                    <p className="font-bold text-slate-700 text-sm">{job.company_name || 'Hiring Team'}</p>
+                    <p className="text-xs text-slate-400 font-medium">Interested in learning more?</p>
                   </div>
                 </div>
-                <Link to={`/profiles/${job.posted_by_user_id}`} className="btn-secondary btn-sm flex-shrink-0">
-                  <Users size={14} className="mr-1.5" /> See Profile
+                <Link to={`/profiles/${job.posted_by_user_id}`} className="px-4 py-2 border border-indigo-200/80 text-indigo-600 bg-white hover:bg-indigo-50/50 font-bold text-xs rounded-xl transition-all flex items-center gap-1 shadow-sm">
+                  <Users size={13} /> View Company
                 </Link>
               </div>
             </div>
 
-
             {/* Sign-in nudge */}
             {!isAuthenticated && (
-              <div className="card p-5 flex items-center gap-3 border-primary/20 bg-primary/5">
-                <AlertCircle size={18} className="text-primary-light flex-shrink-0" />
-                <p className="text-sm text-text-secondary">
-                  <Link to="/auth/login" className="text-primary hover:text-primary-light font-medium">Sign in</Link> or{' '}
-                  <Link to="/auth/signup" className="text-primary hover:text-primary-light font-medium">create an account</Link> to apply.
+              <div className="bg-amber-50/30 border border-amber-200 rounded-2xl p-5 flex items-center gap-3 animate-pulse">
+                <AlertCircle size={18} className="text-amber-600 flex-shrink-0" />
+                <p className="text-xs font-bold text-amber-800">
+                  Please{' '}
+                  <Link to="/auth/login" className="text-indigo-600 hover:underline">Sign In</Link> or{' '}
+                  <Link to="/auth/signup" className="text-indigo-600 hover:underline">Create an Account</Link> to apply and send your credentials.
                 </p>
               </div>
             )}
           </div>
         </div>
       </main>
-
       {showApply && <ApplyModal job={job} onClose={() => setShowApply(false)} />}
       <Footer />
     </div>

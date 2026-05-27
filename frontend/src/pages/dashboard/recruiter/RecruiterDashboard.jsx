@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { PlusCircle, Users, Briefcase, Zap, BarChart2, TrendingUp, Clock } from 'lucide-react'
+import { PlusCircle, Users, Briefcase, Zap, BarChart2, TrendingUp, Clock, Eye } from 'lucide-react'
 import Navbar from '../../../components/layout/Navbar'
 import Sidebar from '../../../components/layout/Sidebar'
 import { jobsApi } from '../../../api/jobs'
 import { useAuth } from '../../../hooks/useAuth'
-import { timeAgo } from '../../../lib/utils'
+import { cn, timeAgo } from '../../../lib/utils'
 
 const SIDEBAR_ITEMS = [
   { href: '/dashboard/recruiter', label: 'Overview', icon: <BarChart2 size={16} /> },
@@ -28,7 +28,7 @@ export default function RecruiterDashboard() {
   const totalApplicants = jobs.reduce((sum, j) => sum + (j.applicant_count || 0), 0)
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       <div className="flex-1 max-w-7xl mx-auto w-full px-4 py-8 flex gap-8">
         <Sidebar items={SIDEBAR_ITEMS} />
@@ -42,17 +42,19 @@ export default function RecruiterDashboard() {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {[
-              { label: 'Total Posts', value: jobs.length, icon: <Briefcase size={18} className="text-primary-light" /> },
-              { label: 'Active Jobs', value: jobs.filter(j => j.is_active).length, icon: <TrendingUp size={18} className="text-success" /> },
-              { label: 'Total Applicants', value: totalApplicants, icon: <Users size={18} className="text-accent-light" /> },
-              { label: 'Featured', value: jobs.filter(j => j.is_featured).length, icon: <Zap size={18} className="text-warning" /> },
+              { label: 'Total Posts', value: jobs.length, bg: 'bg-indigo-50/50', text: 'text-indigo-600', icon: <Briefcase size={16} /> },
+              { label: 'Active Jobs', value: jobs.filter(j => j.is_active).length, bg: 'bg-emerald-50/50', text: 'text-emerald-600', icon: <TrendingUp size={16} /> },
+              { label: 'Total Applicants', value: totalApplicants, bg: 'bg-violet-50/50', text: 'text-violet-600', icon: <Users size={16} /> },
+              { label: 'Featured', value: jobs.filter(j => j.is_featured).length, bg: 'bg-amber-50/50', text: 'text-amber-600', icon: <Zap size={16} /> },
             ].map((s) => (
-              <div key={s.label} className="stat-card">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs text-text-muted">{s.label}</p>
-                  <div className="w-8 h-8 bg-surface-2 rounded-lg flex items-center justify-center">{s.icon}</div>
+              <div key={s.label} className="card p-5 flex flex-col gap-2 hover:border-border-light transition-all duration-300 cursor-default">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-text-muted font-bold">{s.label}</span>
+                  <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center', s.bg, s.text)}>
+                    {s.icon}
+                  </div>
                 </div>
-                <p className="text-2xl font-bold text-text-primary">{s.value}</p>
+                <p className="text-2xl font-extrabold text-text-primary">{s.value}</p>
               </div>
             ))}
           </div>
@@ -89,20 +91,46 @@ export default function RecruiterDashboard() {
           ) : (
             <div className="flex flex-col gap-3">
               {jobs.map((job) => (
-                <div key={job.id} className="card p-4 flex items-center justify-between gap-4 hover:border-border-light transition-colors">
+                <div key={job.id} className="card card-hover p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-text-primary text-sm truncate">{job.title}</h3>
-                      {job.is_featured && <span className="badge-featured text-[10px]">⭐ Featured</span>}
+                    <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                      <h3 className="font-bold text-text-primary text-sm sm:text-base truncate">{job.title}</h3>
+                      {job.is_featured && (
+                        <span className="badge text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-100">
+                          ⭐ Featured
+                        </span>
+                      )}
+                      {!job.is_active && (
+                        <span className="badge text-[10px] font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-600 border border-rose-100">
+                          Closed
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-xs text-text-muted flex items-center gap-1"><Clock size={10} /> {timeAgo(job.created_at)}</span>
-                      <span className="text-xs text-text-muted flex items-center gap-1"><Users size={10} /> {job.applicant_count || 0} applicants</span>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                      <span className="text-xs text-text-muted font-semibold flex items-center gap-1">
+                        <Clock size={12} className="text-border-light" /> {timeAgo(job.created_at)}
+                      </span>
+                      <span className="text-border-light text-xs hidden sm:inline">·</span>
+                      <span className="text-xs text-text-muted font-semibold flex items-center gap-1">
+                        <Users size={12} className="text-border-light" /> {job.applicant_count || 0} applicants
+                      </span>
                     </div>
                   </div>
-                  <Link to={`/dashboard/recruiter/jobs/${job.id}/applicants`} className="btn-secondary btn-sm flex-shrink-0 text-xs">
-                    View Applicants
-                  </Link>
+                  <div className="flex items-center gap-2 flex-shrink-0 self-start sm:self-center">
+                    <Link
+                      to={`/jobs/${job.id}`}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold text-text-secondary bg-surface-2 hover:bg-surface-3 border border-border transition-colors flex items-center gap-1"
+                      title="View public job detail"
+                    >
+                      <Eye size={13} /> View Detail
+                    </Link>
+                    <Link
+                      to={`/dashboard/recruiter/jobs/${job.id}/applicants`}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold text-primary bg-primary-muted hover:bg-primary hover:text-white border border-border-light transition-all flex items-center gap-1"
+                    >
+                      <Users size={13} /> Applicants ({job.applicant_count || 0})
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>

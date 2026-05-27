@@ -1,72 +1,80 @@
 import { Link } from 'react-router-dom'
-import { Briefcase, Globe, Share2, ExternalLink } from 'lucide-react'
+import { Briefcase, Globe, Share2, ExternalLink, Mail } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 
 export default function Footer() {
   const { user, isAuthenticated, canPostJob } = useAuth()
 
-  // Build role-aware Platform links
   const platformLinks = [
     { to: '/jobs', label: 'Browse Jobs', show: true },
-    // "Post a Job" only for employer / recruiter
+    { to: '/seekers', label: 'Browse Seekers', show: true },
     { to: '/dashboard/employer', label: 'Post a Job', show: canPostJob },
-    // "My Applications" only for job seekers
     { to: '/dashboard/jobseeker', label: 'My Applications', show: isAuthenticated && user?.role === 'jobseeker' },
-    // "Go Premium" only for employer / recruiter
     { to: '/payment/upgrade', label: 'Go Premium ⚡', show: canPostJob },
-    // Sign up CTA for guests
     { to: '/auth/signup', label: 'Get Started Free', show: !isAuthenticated },
-  ].filter((l) => l.show)
+  ].filter(l => l.show)
 
   return (
-    <footer className="border-t border-border bg-surface mt-auto">
-      <div className="max-w-7xl mx-auto px-4 py-12">
+    <footer style={{ borderTop: '1px solid rgba(255,255,255,0.04)', background: 'linear-gradient(135deg, #090d16 0%, #05070c 100%)' }} className="mt-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+
+          {/* Brand */}
           <div className="col-span-1 md:col-span-2">
-            <Link to="/" className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center shadow-glow-sm">
-                <Briefcase size={14} className="text-white" />
+            <Link to="/" className="inline-flex items-center gap-2.5 mb-4">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center animate-pulse" style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+                <Briefcase size={15} className="text-white" />
               </div>
-              <span className="font-bold text-text-primary">Job<span className="text-primary-light">Portal</span></span>
+              <span className="font-extrabold text-lg text-white tracking-tight">Job<span className="text-indigo-400">Portal</span></span>
             </Link>
-            <p className="text-sm text-text-muted max-w-xs leading-relaxed">
-              The platform connecting top employers, recruiters, and job seekers. AI-powered matching for your next career move.
+            <p className="text-xs font-semibold text-slate-400 max-w-xs leading-relaxed mb-5">
+              Connecting top employers, recruiters, and job seekers with AI‑powered resume scoring for smarter hiring decisions.
             </p>
-            <div className="flex items-center gap-3 mt-4">
-              <a href="#" className="btn-icon" aria-label="Website"><Globe size={16} /></a>
-              <a href="#" className="btn-icon" aria-label="Share"><Share2 size={16} /></a>
-              <a href="#" className="btn-icon" aria-label="More"><ExternalLink size={16} /></a>
+            <div className="flex items-center gap-2">
+              {[
+                { icon: <Globe size={15} />, label: 'Website' },
+                { icon: <Share2 size={15} />, label: 'Share' },
+                { icon: <ExternalLink size={15} />, label: 'Link' },
+                { icon: <Mail size={15} />, label: 'Email', href: 'mailto:hello@jobportal.com' },
+              ].map(s => (
+                <a key={s.label} href={s.href || '#'} aria-label={s.label}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white border border-white/5 hover:border-indigo-500/50 hover:bg-indigo-600/20 transition-all duration-200 shadow-sm bg-white/[0.02]"
+                >
+                  {s.icon}
+                </a>
+              ))}
             </div>
           </div>
 
+          {/* Platform */}
           <div>
-            <p className="text-sm font-semibold text-text-primary mb-4">Platform</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-4">Platform</p>
             <ul className="flex flex-col gap-2.5">
-              {platformLinks.map((link) => (
+              {platformLinks.map(link => (
                 <li key={link.to}>
-                  <Link to={link.to} className="text-sm text-text-muted hover:text-text-primary transition-colors">
-                    {link.label}
-                  </Link>
+                  <Link to={link.to} className="text-xs font-semibold text-slate-400 hover:text-white transition-colors">{link.label}</Link>
                 </li>
               ))}
             </ul>
           </div>
 
+          {/* Company */}
           <div>
-            <p className="text-sm font-semibold text-text-primary mb-4">Company</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-4">Company</p>
             <ul className="flex flex-col gap-2.5">
-              <li><a href="#" className="text-sm text-text-muted hover:text-text-primary transition-colors">About</a></li>
-              <li><a href="#" className="text-sm text-text-muted hover:text-text-primary transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="text-sm text-text-muted hover:text-text-primary transition-colors">Terms of Service</a></li>
-              <li><a href="#" className="text-sm text-text-muted hover:text-text-primary transition-colors">Contact</a></li>
+              <li><a href="#about" className="text-xs font-semibold text-slate-400 hover:text-white transition-colors">About Us</a></li>
+              <li><a href="#how-it-works" className="text-xs font-semibold text-slate-400 hover:text-white transition-colors">How It Works</a></li>
+              <li><a href="#" className="text-xs font-semibold text-slate-400 hover:text-white transition-colors">Privacy Policy</a></li>
+              <li><a href="#" className="text-xs font-semibold text-slate-400 hover:text-white transition-colors">Terms of Service</a></li>
+              <li><a href="#" className="text-xs font-semibold text-slate-400 hover:text-white transition-colors">Contact</a></li>
             </ul>
           </div>
         </div>
 
-        <div className="divider mt-8" />
-        <p className="text-xs text-text-muted text-center">
-          © {new Date().getFullYear()} JobPortal. All rights reserved.
-        </p>
+        <div className="mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+          <p className="text-[11px] font-bold text-slate-500">© {new Date().getFullYear()} JobPortal. All rights reserved.</p>
+          <p className="text-[11px] font-bold text-slate-500">Built with ❤️ for job seekers & recruiters</p>
+        </div>
       </div>
     </footer>
   )

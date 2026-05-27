@@ -106,8 +106,8 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      {/* Background glow */}
-      <div className="fixed inset-0 bg-hero-glow pointer-events-none" />
+      {/* Subtle background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5 pointer-events-none" />
 
       <div className="w-full max-w-md animate-slide-up">
         {/* Logo */}
@@ -115,7 +115,7 @@ export default function LoginPage() {
           <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-glow">
             <Briefcase size={18} className="text-white" />
           </div>
-          <span className="font-bold text-xl text-text-primary">Job<span className="text-primary-light">Portal</span></span>
+          <span className="font-bold text-xl text-text-primary">Job<span className="text-primary">Portal</span></span>
         </Link>
 
         <div className="card p-8 shadow-glow-sm">
@@ -250,7 +250,7 @@ export default function LoginPage() {
 
           <p className="text-center text-sm text-text-muted mt-6">
             Don't have an account?{' '}
-            <Link to="/auth/signup" className="text-primary hover:text-primary-light font-medium transition-colors">
+            <Link to="/auth/signup" className="text-primary hover:text-primary-dark font-medium transition-colors">
               Sign up
             </Link>
           </p>
@@ -259,4 +259,5 @@ export default function LoginPage() {
     </div>
   )
 }
+
 

@@ -286,8 +286,88 @@ async def run_ai_score(
     job_result = await db.execute(select(Job).where(Job.id == application.job_id))
     job = job_result.scalar_one_or_none()
 
-    # Read resume text (basic — real impl would use pypdf2/pdfplumber)
-    resume_text = f"Resume on file: {application.resume_url or 'not provided'}"
+    # Reconstruct the local file path for application.resume_url if present, or download it if it's remote
+    extracted_resume_text = ""
+    if application.resume_url:
+        import os
+        from app.config import settings
+        import pypdf
+        import io
+        import httpx
+        
+        # Try local file first
+        filename = os.path.basename(application.resume_url)
+        local_path = os.path.join(settings.UPLOAD_DIR, "resumes", filename)
+        
+        pdf_bytes = None
+        if os.path.exists(local_path):
+            try:
+                with open(local_path, "rb") as f:
+                    pdf_bytes = f.read()
+            except Exception as e:
+                print(f"[Local PDF Read Error]: {e}")
+        elif application.resume_url.startswith("http") or application.resume_url.startswith("/uploads/"):
+            url = application.resume_url
+            if url.startswith("/uploads/"):
+                url = f"https://job-protal-jbop.onrender.com{url}"
+            # Download from remote URL if it's not found locally
+            try:
+                print(f"Downloading remote resume: {url}")
+                with httpx.Client(timeout=10.0) as client:
+                    resp = client.get(url)
+                    if resp.status_code == 200:
+                        pdf_bytes = resp.content
+            except Exception as e:
+                print(f"[Remote PDF Download Error]: {e}")
+                
+        if pdf_bytes:
+            try:
+                reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
+                pdf_pages_text = []
+                for page in reader.pages:
+                    text = page.extract_text()
+                    if text:
+                        pdf_pages_text.append(text)
+                extracted_resume_text = "\n".join(pdf_pages_text).strip()
+            except Exception as e:
+                print(f"[PDF Parse Error]: {e}")
+
+    # Fetch JobSeeker profile details
+    js_result = await db.execute(select(JobSeeker).where(JobSeeker.id == application.jobseeker_id))
+    jobseeker = js_result.scalar_one_or_none()
+
+    # Build a comprehensive candidate info context
+    candidate_info_parts = []
+    
+    if application.cover_letter:
+        candidate_info_parts.append(f"Candidate Cover Letter:\n{application.cover_letter}")
+        
+    if extracted_resume_text:
+        # Prioritize the actual PDF resume content
+        candidate_info_parts.append(f"Candidate Resume Content:\n{extracted_resume_text}")
+    else:
+        # Fall back to profile details only if no PDF text could be parsed
+        profile_parts = []
+        if jobseeker:
+            if jobseeker.headline:
+                profile_parts.append(f"Candidate Profile Headline/Bio: {jobseeker.headline}")
+            if jobseeker.skills:
+                profile_parts.append(f"Candidate Profile Skills: {', '.join(jobseeker.skills)}")
+            if jobseeker.experience_years:
+                profile_parts.append(f"Candidate Experience Level: {jobseeker.experience_years} years")
+            if jobseeker.location:
+                profile_parts.append(f"Candidate Location: {jobseeker.location}")
+        
+        if profile_parts:
+            candidate_info_parts.append("Candidate Profile Details (No PDF text available):\n" + "\n".join(profile_parts))
+        elif application.resume_url:
+            candidate_info_parts.append(f"Resume on file: {application.resume_url}")
+
+    # Combine everything to be scored
+    if candidate_info_parts:
+        resume_text = "\n\n".join(candidate_info_parts)
+    else:
+        resume_text = "No candidate profile or resume content available."
 
     ai_result = await score_resume_against_job(
         resume_text=resume_text,
@@ -296,8 +376,16 @@ async def run_ai_score(
         required_skills=job.skills_required or [],
     )
 
-    application.ai_score = ai_result["score"]
-    application.ai_feedback = str(ai_result)
+    # Only persist score if scoring succeeded (None means AI call failed)
+    if ai_result["score"] is not None:
+        application.ai_score = ai_result["score"]
+        application.ai_feedback = str(ai_result)
+    else:
+        # AI failed — raise so the frontend shows the error toast, don't wipe existing score
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="AI scoring failed. Please try again.",
+        )
     await increment_ai_usage(current_user.id, db)
     await db.commit()
     await db.refresh(application)

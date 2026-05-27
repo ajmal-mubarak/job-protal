@@ -22,6 +22,9 @@ async def lifespan(app: FastAPI):
     # 2. Seed admin user from .env
     await seed_admin()
 
+    # 2.5. Seed dummy seeker and recruiter credentials for local testing
+    await seed_dummy_credentials()
+
     # 3. Ensure uploads directory exists
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 
@@ -55,6 +58,72 @@ async def seed_admin():
             print(f"[OK] Admin seeded: {settings.ADMIN_EMAIL}")
         else:
             print(f"[INFO] Admin already exists: {settings.ADMIN_EMAIL}")
+
+
+async def seed_dummy_credentials():
+    """Create dummy jobseeker and recruiter users for local testing."""
+    from app.database import AsyncSessionLocal
+    from app.models.user import User, UserRole
+    from app.models.employer import JobSeeker, Recruiter
+    from sqlalchemy import select
+
+    async with AsyncSessionLocal() as db:
+        # Seeding Seeker
+        seeker_email = "seeker@jobportal.com"
+        result = await db.execute(select(User).where(User.email == seeker_email))
+        seeker_user = result.scalar_one_or_none()
+        if not seeker_user:
+            seeker_user = User(
+                email=seeker_email,
+                password_hash=hash_password("Password123!"),
+                name="John Seeker (Demo)",
+                role=UserRole.jobseeker,
+                is_verified=True,
+                is_active=True,
+            )
+            db.add(seeker_user)
+            await db.flush()
+
+            # Create JobSeeker profile with dummy skills
+            db.add(JobSeeker(
+                user_id=seeker_user.id,
+                headline="Experienced Full-Stack Software Engineer specializing in Python and React",
+                skills=["Python", "JavaScript", "React", "FastAPI", "SQLAlchemy", "PostgreSQL"],
+                experience_years=5,
+                location="San Francisco, CA"
+            ))
+            await db.commit()
+            print(f"[OK] Seeker seeded: {seeker_email}")
+        else:
+            print(f"[INFO] Seeker already exists: {seeker_email}")
+
+        # Seeding Recruiter
+        recruiter_email = "recruiter@jobportal.com"
+        result = await db.execute(select(User).where(User.email == recruiter_email))
+        recruiter_user = result.scalar_one_or_none()
+        if not recruiter_user:
+            recruiter_user = User(
+                email=recruiter_email,
+                password_hash=hash_password("Password123!"),
+                name="Jane Recruiter (Demo)",
+                role=UserRole.recruiter,
+                is_verified=True,
+                is_active=True,
+            )
+            db.add(recruiter_user)
+            await db.flush()
+
+            # Create Recruiter profile
+            db.add(Recruiter(
+                user_id=recruiter_user.id,
+                agency_name="Tech Talent Recruiting",
+                bio="Helping tech companies hire elite software engineering talent.",
+                is_premium=True
+            ))
+            await db.commit()
+            print(f"[OK] Recruiter seeded: {recruiter_email}")
+        else:
+            print(f"[INFO] Recruiter already exists: {recruiter_email}")
 
 
 # ── App Factory ───────────────────────────────────────────────────────────────

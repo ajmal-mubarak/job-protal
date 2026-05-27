@@ -199,7 +199,7 @@ async def list_seekers(
     location: Optional[str] = None,
     open_to_work: bool = True,
     limit: int = 30,
-    current_user: User = Depends(require_employer_or_recruiter),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Browse job seeker profiles — for employers and recruiters."""

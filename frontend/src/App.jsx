@@ -70,15 +70,15 @@ export default function App() {
     <BrowserRouter>
       <AuthInitializer />
       <SocketConnector />
-      <Toaster position="top-right" richColors closeButton theme="dark" />
+      <Toaster position="top-right" richColors closeButton />
 
       <Routes>
         {/* ── Public ─────────────────────────────────────────────────── */}
         <Route path="/" element={<LandingPage />} />
 
-        {/* ── Jobs (login required to browse/view) ────────────────────── */}
-        <Route path="/jobs" element={<ProtectedRoute><JobsListPage /></ProtectedRoute>} />
-        <Route path="/jobs/:id" element={<ProtectedRoute><JobDetailPage /></ProtectedRoute>} />
+        {/* ── Jobs (public — apply/message requires login) ───────────────── */}
+        <Route path="/jobs" element={<JobsListPage />} />
+        <Route path="/jobs/:id" element={<JobDetailPage />} />
 
         {/* ── Auth (guest only) ───────────────────────────────────────── */}
         <Route path="/auth/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
@@ -107,8 +107,9 @@ export default function App() {
 
         {/* ── Profile ─────────────────────────────────────────────────────── */}
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-        <Route path="/seekers" element={<RoleRoute allowedRoles={['employer', 'recruiter']}><SeekersPage /></RoleRoute>} />
-        <Route path="/profiles/:userId" element={<ProtectedRoute><PublicProfilePage /></ProtectedRoute>} />
+        {/* Seekers & public profiles — anyone can browse */}
+        <Route path="/seekers" element={<SeekersPage />} />
+        <Route path="/profiles/:userId" element={<PublicProfilePage />} />
 
         {/* ── Chat ────────────────────────────────────────────────────── */}
         <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />

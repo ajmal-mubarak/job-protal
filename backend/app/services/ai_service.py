@@ -3,7 +3,7 @@ import json
 from app.config import settings
 
 _client = None  # Lazy-initialized on first use — avoids blocking startup
-_MODEL = "gemini-2.0-flash"
+_MODEL = "gemini-2.5-flash"
 
 
 def _get_client():
@@ -61,17 +61,17 @@ Return ONLY valid JSON in this exact format (no markdown, no extra text):
                 raw = raw[4:]
         result = json.loads(raw.strip())
 
-        # Validate and clamp score
-        result["score"] = max(0.0, min(100.0, float(result.get("score", 0))))
+        # Validate and clamp score — minimum 1 so 0 is never a valid displayed score
+        result["score"] = max(1.0, min(100.0, float(result.get("score", 1))))
         result.setdefault("strengths", [])
         result.setdefault("gaps", [])
         result.setdefault("summary", "Unable to generate summary.")
         return result
 
     except Exception as e:
-        print(f"❌ Gemini AI error: {e}")
+        print(f"[Gemini Error] Gemini AI error: {e}")
         return {
-            "score": 0.0,
+            "score": None,
             "strengths": [],
             "gaps": ["Could not analyze resume"],
             "summary": "AI scoring failed. Please try again.",
@@ -112,7 +112,7 @@ Return ONLY valid JSON in this exact format:
                 raw = raw[4:]
         return json.loads(raw.strip())
     except Exception as e:
-        print(f"❌ Gemini parse error: {e}")
+        print(f"[Gemini Error] Gemini parse error: {e}")
         return {
             "name": None, "email": None, "phone": None,
             "skills": [], "experience_years": 0,
