@@ -92,7 +92,7 @@ function SeekerCard({ seeker, onMessage }) {
 
 export default function SeekersPage() {
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, isLoading: authLoading } = useAuthStore()
   const [seekers, setSeekers] = useState([])
   const [loading, setLoading] = useState(true)
   const [messaging, setMessaging] = useState(null)
@@ -102,7 +102,6 @@ export default function SeekersPage() {
   const [openOnly, setOpenOnly] = useState(false)
 
   const fetchSeekers = async (params = {}) => {
-    if (!isAuthenticated) return
     setLoading(true)
     try {
       const effectiveOpenOnly = params.openOnly !== undefined ? params.openOnly : openOnly
@@ -124,10 +123,12 @@ export default function SeekersPage() {
   }
 
   useEffect(() => { 
-    if (isAuthenticated) {
+    if (!authLoading && isAuthenticated) {
       fetchSeekers() 
+    } else if (!authLoading && !isAuthenticated) {
+      setLoading(false)
     }
-  }, [isAuthenticated])
+  }, [authLoading, isAuthenticated])
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -149,6 +150,18 @@ export default function SeekersPage() {
     } finally {
       setMessaging(null)
     }
+  }
+
+  // Show spinner while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#f8fafc]">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader size={32} className="text-indigo-600 animate-spin" />
+        </main>
+      </div>
+    )
   }
 
   // Graceful screen for unauthenticated users
